@@ -31,8 +31,8 @@ public class Kafka
             var config = Configurations(input, options, socket, sasl, ssl);
             using var producer = new ProducerBuilder<Null, string>(config).Build();
             var result = await producer.ProduceAsync(
-                input.Topic, 
-                new Message<Null, string>  { Value = JsonSerializer.Serialize(input.Message) }, 
+                input.Topic,
+                new Message<Null, string> { Value = JsonSerializer.Serialize(input.Message) },
                 cancellationToken);
 
             return new Result(true, result.Status.ToString(), input.Message, result.Timestamp.UtcDateTime.ToString());
@@ -47,28 +47,28 @@ public class Kafka
     {
         ProducerConfig config = new()
         {
-            BootstrapServers = input.Host,
-            SecurityProtocol = SetSecurityProtocol(input),
-            CompressionType = SetCompressionType(input),
             Acks = SetAcks(options),
-            Partitioner = SetPartitioner(options),
             ApiVersionRequest = options.ApiVersionRequest,
-            TransactionalId = options.TransactionalId,
-            TransactionTimeoutMs = options.TransactionTimeoutMs,
+            BootstrapServers = input.Host,
+            CompressionType = SetCompressionType(input),
+            EnableIdempotence = options.EnableIdempotence,
+            LingerMs = options.LingerMs,
             MaxInFlight = options.MaxInFlight,
             MessageTimeoutMs = options.MessageTimeoutMs,
             MessageMaxBytes = options.MessageMaxBytes,
             MessageSendMaxRetries = options.MessageSendMaxRetries,
+            Partitioner = SetPartitioner(options),
             QueueBufferingMaxKbytes = options.QueueBufferingMaxKbytes,
             QueueBufferingMaxMessages = options.QueueBufferingMaxMessages,
-            EnableIdempotence = options.EnableIdempotence,
-            LingerMs = options.LingerMs,
+            SecurityProtocol = SetSecurityProtocol(input),
             SocketTimeoutMs = socket.SocketTimeoutMs,
             SocketConnectionSetupTimeoutMs = socket.SocketConnectionSetupTimeoutMs,
             SocketKeepaliveEnable = socket.SocketKeepaliveEnable,
             SocketMaxFails = socket.SocketMaxFails,
             SocketNagleDisable = socket.SocketNagleDisable,
             SocketReceiveBufferBytes = socket.SocketReceiveBufferBytes,
+            TransactionalId = options.TransactionalId,
+            TransactionTimeoutMs = options.TransactionTimeoutMs,
         };
 
         if (sasl.UseSasl)
@@ -78,7 +78,7 @@ public class Kafka
             config.SaslPassword = sasl.SaslPassword;
             config.SaslOauthbearerMethod = GetSaslOauthbearerMethod(sasl);
             config.SaslOauthbearerClientId = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerClientId) ? "" : sasl.SaslOauthbearerClientId;
-            config.SaslOauthbearerClientSecret = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerClientSecret) ? "": sasl.SaslOauthbearerClientSecret;
+            config.SaslOauthbearerClientSecret = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerClientSecret) ? "" : sasl.SaslOauthbearerClientSecret;
             config.SaslOauthbearerTokenEndpointUrl = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerTokenEndpointUrl) ? "" : sasl.SaslOauthbearerTokenEndpointUrl;
             config.SaslOauthbearerConfig = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerConfig) ? "" : sasl.SaslOauthbearerConfig;
             config.SaslOauthbearerExtensions = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerExtensions) ? "" : sasl.SaslOauthbearerExtensions;
@@ -109,7 +109,7 @@ public class Kafka
             config.SslCurvesList = String.IsNullOrWhiteSpace(ssl.SslCurvesList) ? "" : ssl.SslCurvesList;
             config.SslSigalgsList = String.IsNullOrWhiteSpace(ssl.SslSigalgsList) ? "" : ssl.SslSigalgsList;
         }
-        
+
         return config;
     }
     private static SecurityProtocol SetSecurityProtocol(Input input)

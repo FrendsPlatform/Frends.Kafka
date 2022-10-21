@@ -8,7 +8,7 @@ public class UnitTests
 {
     /*
         Docker compose:
-        Run command 'docker-compose up -d' in .\Frends.Kafka.Send.Tests\Files\ 
+        Run command 'docker-compose up -d' in .\Frends.Kafka.Produce.Tests\Files\ 
         
         Read message(s) from topic:
         docker exec --interactive --tty broker kafka-console-consumer --bootstrap-server localhost:9092 --topic TestTopic --from-beginning

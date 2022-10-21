@@ -19,7 +19,7 @@ Rebuild the project
 
 Run tests
 
- Run command in .\Frends.Kafka.Send.Tests\Files to create a local Kafka service to docker:
+ Run command in .\Frends.Kafka.Produce.Tests\Files to create a local Kafka service to docker:
 `docker-compose up -d`
  
 `dotnet test`

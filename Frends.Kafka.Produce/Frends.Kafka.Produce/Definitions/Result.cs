@@ -26,7 +26,7 @@ public class Result
     /// </summary>
     public string Timestamp { get; private set; }
 
-    internal Result(bool success, string status, string message, string timestamp) 
+    internal Result(bool success, string status, string message, string timestamp)
     {
         Success = success;
         Status = status;

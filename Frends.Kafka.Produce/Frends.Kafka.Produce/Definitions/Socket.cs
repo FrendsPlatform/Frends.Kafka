@@ -27,7 +27,7 @@ public class Socket
     /// </summary>
     /// <example>60000</example>
     [DefaultValue(60000)]
-    public int? SocketTimeoutMs { get; set; }
+    public int SocketTimeoutMs { get; set; }
 
     /// <summary>
     /// Maximum time allowed for broker connection setup (TCP connection setup as well SSL and SASL handshake).
@@ -35,7 +35,7 @@ public class Socket
     /// </summary>
     /// <example>30000</example>
     [DefaultValue(30000)]
-    public int? SocketConnectionSetupTimeoutMs { get; set; }
+    public int SocketConnectionSetupTimeoutMs { get; set; }
 
     /// <summary>
     /// Disconnect from broker when this number of Produce failures (e.g., timed out requests) is reached. 
@@ -45,7 +45,7 @@ public class Socket
     /// </summary>
     /// <example>1</example>
     [DefaultValue(1)]
-    public int? SocketMaxFails { get; set; }
+    public int SocketMaxFails { get; set; }
 
     /// <summary>
     /// Broker socket receive buffer size. 
@@ -53,7 +53,7 @@ public class Socket
     /// </summary>
     /// <example>0</example>
     [DefaultValue(0)]
-    public int? SocketReceiveBufferBytes { get; set; }
+    public int SocketReceiveBufferBytes { get; set; }
 
     /// <summary>
     /// Broker socket Produce buffer size. 
@@ -61,5 +61,5 @@ public class Socket
     /// </summary>
     /// <example>0</example>
     [DefaultValue(0)]
-    public int? SocketProduceBufferBytes { get; set; }
+    public int SocketProduceBufferBytes { get; set; }
 }

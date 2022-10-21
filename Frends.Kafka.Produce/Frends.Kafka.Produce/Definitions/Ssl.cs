@@ -1,5 +1,4 @@
-﻿using Confluent.Kafka;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Frends.Kafka.Produce.Definitions;
@@ -68,14 +67,14 @@ public class Ssl
     /// OpenSSL >= 1.1.0 required.
     /// </summary>
     /// <example>c:\temp</example>
-    [UIHint(nameof(UseSSL), "", true)] 
+    [UIHint(nameof(UseSSL), "", true)]
     public string SslEngineLocation { get; set; } = "";
 
     /// <summary>
     /// Path to CRL for verifying broker's certificate validity.
     /// </summary>
     /// <example>c:\temp</example>
-    [UIHint(nameof(UseSSL), "", true)] 
+    [UIHint(nameof(UseSSL), "", true)]
     public string SslCrlLocation { get; set; } = "";
 
     /// <summary>
@@ -139,13 +138,13 @@ public class Ssl
     /// The supported-curves extension in the TLS ClientHello message specifies the curves (standard/named, or 'explicit' GF(2^k) or GF(p)) the client is willing to have the server use.
     /// </summary>
     /// <example>1</example>
-    [UIHint(nameof(UseSSL), "", true)] 
+    [UIHint(nameof(UseSSL), "", true)]
     public string SslCurvesList { get; set; } = "";
 
     /// <summary>
     /// The client uses the TLS ClientHello signature_algorithms extension to indicate to the server which signature/hash algorithm pairs may be used in digital signatures.
     /// </summary>
     /// <example>1</example>
-    [UIHint(nameof(UseSSL), "", true)] 
+    [UIHint(nameof(UseSSL), "", true)]
     public string SslSigalgsList { get; set; } = "";
 }

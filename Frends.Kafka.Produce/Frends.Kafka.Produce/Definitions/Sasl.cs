@@ -1,5 +1,4 @@
-﻿using Confluent.Kafka;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Frends.Kafka.Produce.Definitions;
