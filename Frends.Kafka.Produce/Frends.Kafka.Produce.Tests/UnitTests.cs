@@ -33,30 +33,10 @@ public class UnitTests
 
         var _options = new Options()
         {
-            MessageTimeoutMs = default,
-            Acks = default,
-            MessageSendMaxRetries = default,
-            ApiVersionRequest = default,
-            EnableIdempotence = default,
-            LingerMs = default,
-            MaxInFlight = default,
-            MessageMaxBytes = default,
-            Partitioner = default,
-            QueueBufferingMaxKbytes = default,
-            QueueBufferingMaxMessages = default,
-            TransactionalId = default,
-            TransactionTimeoutMs = default,
         };
 
         var _socket = new Socket()
         {
-            SocketConnectionSetupTimeoutMs = default,
-            SocketKeepaliveEnable = default,
-            SocketMaxFails = default,
-            SocketNagleDisable = default,
-            SocketProduceBufferBytes = default,
-            SocketReceiveBufferBytes = default,
-            SocketTimeoutMs = default,
         };
 
         var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
@@ -75,30 +55,11 @@ public class UnitTests
 
         var _options = new Options()
         {
-            MessageTimeoutMs = 10,
-            Acks = default,
-            MessageSendMaxRetries = default,
-            ApiVersionRequest = default,
-            EnableIdempotence = default,
-            LingerMs = default,
-            MaxInFlight = default,
-            MessageMaxBytes = default,
-            Partitioner = default,
-            QueueBufferingMaxKbytes = default,
-            QueueBufferingMaxMessages = default,
-            TransactionalId = default,
-            TransactionTimeoutMs = default,
+            MessageTimeoutMs = 10
         };
 
         var _socket = new Socket()
         {
-            SocketConnectionSetupTimeoutMs = default,
-            SocketKeepaliveEnable = default,
-            SocketMaxFails = default,
-            SocketNagleDisable = default,
-            SocketProduceBufferBytes = default,
-            SocketReceiveBufferBytes = default,
-            SocketTimeoutMs = default,
         };
 
         var ex = await Assert.ThrowsExceptionAsync<Exception>(() => Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default));

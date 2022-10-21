@@ -27,7 +27,7 @@ public class Socket
     /// </summary>
     /// <example>60000</example>
     [DefaultValue(60000)]
-    public int SocketTimeoutMs { get; set; }
+    public int SocketTimeoutMs { get; set; } = 60000;
 
     /// <summary>
     /// Maximum time allowed for broker connection setup (TCP connection setup as well SSL and SASL handshake).
@@ -35,7 +35,7 @@ public class Socket
     /// </summary>
     /// <example>30000</example>
     [DefaultValue(30000)]
-    public int SocketConnectionSetupTimeoutMs { get; set; }
+    public int SocketConnectionSetupTimeoutMs { get; set; } = 30000;
 
     /// <summary>
     /// Disconnect from broker when this number of Produce failures (e.g., timed out requests) is reached. 
