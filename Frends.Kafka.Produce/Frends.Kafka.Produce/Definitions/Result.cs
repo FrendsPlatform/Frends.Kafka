@@ -6,7 +6,7 @@
 public class Result
 {
     /// <summary>
-    /// Message sent.
+    /// True if message was produced successfully.
     /// </summary>
     /// <example>true</example>
     public bool Success { get; private set; }
@@ -14,23 +14,19 @@ public class Result
     /// <summary>
     /// Persistence status.
     /// </summary>
+    /// <example>PossiblyPersisted</example>
     public string Status { get; private set; }
 
     /// <summary>
-    /// Message.
+    /// The Kafka message timestamp .
     /// </summary>
-    public string Message { get; private set; }
-
-    /// <summary>
-    /// Timestamp.
-    /// </summary>
+    /// <example>2022-10-19 06:00:00</example>
     public string Timestamp { get; private set; }
 
-    internal Result(bool success, string status, string message, string timestamp)
+    internal Result(bool success, string status, string timestamp)
     {
         Success = success;
         Status = status;
-        Message = message;
         Timestamp = timestamp;
     }
 }

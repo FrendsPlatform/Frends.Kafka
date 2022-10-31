@@ -117,6 +117,7 @@ public class Sasl
     /// </summary>
     /// <example>kafkaclient</example>
     [UIHint(nameof(UseSasl), "", true)]
+    [DisplayFormat(DataFormatString = "Text")]
     [DefaultValue("kafkaclient")]
     public string SaslKerberosPrincipal { get; set; }
 
@@ -125,6 +126,7 @@ public class Sasl
     /// </summary>
     /// <example>kafka</example>
     [UIHint(nameof(UseSasl), "", true)]
+    [DisplayFormat(DataFormatString = "Text")]
     [DefaultValue("kafka")]
     public string SaslKerberosServiceName { get; set; }
 }

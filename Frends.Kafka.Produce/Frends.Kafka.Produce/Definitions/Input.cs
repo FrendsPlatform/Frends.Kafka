@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace Frends.Kafka.Produce.Definitions;
 
@@ -10,7 +11,7 @@ public class Input
     /// <summary>
     /// Initial list of brokers as a CSV list of broker host or host:port. 
     /// </summary>
-    /// <example>localhost:1234</example>
+    /// <example>localhost:1234 OR localhost:1234, localhost:4321</example>
     public string Host { get; set; }
 
     /// <summary>

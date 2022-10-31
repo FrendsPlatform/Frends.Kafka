@@ -35,7 +35,7 @@ public class Kafka
                 new Message<Null, string> { Value = JsonSerializer.Serialize(input.Message) },
                 cancellationToken);
 
-            return new Result(true, result.Status.ToString(), input.Message, result.Timestamp.UtcDateTime.ToString());
+            return new Result(true, result.Status.ToString(), result.Timestamp.UtcDateTime.ToString());
         }
         catch (Exception ex)
         {
@@ -47,20 +47,20 @@ public class Kafka
     {
         ProducerConfig config = new()
         {
-            Acks = SetAcks(options),
+            Acks = GetAcks(options),
             ApiVersionRequest = options.ApiVersionRequest,
             BootstrapServers = input.Host,
-            CompressionType = SetCompressionType(input),
+            CompressionType = GetCompressionType(input),
             EnableIdempotence = options.EnableIdempotence,
             LingerMs = options.LingerMs,
             MaxInFlight = options.MaxInFlight,
             MessageTimeoutMs = options.MessageTimeoutMs,
             MessageMaxBytes = options.MessageMaxBytes,
             MessageSendMaxRetries = options.MessageSendMaxRetries,
-            Partitioner = SetPartitioner(options),
+            Partitioner = GetPartitioner(options),
             QueueBufferingMaxKbytes = options.QueueBufferingMaxKbytes,
             QueueBufferingMaxMessages = options.QueueBufferingMaxMessages,
-            SecurityProtocol = SetSecurityProtocol(input),
+            SecurityProtocol = GetSecurityProtocol(input),
             SocketTimeoutMs = socket.SocketTimeoutMs,
             SocketConnectionSetupTimeoutMs = socket.SocketConnectionSetupTimeoutMs,
             SocketKeepaliveEnable = socket.SocketKeepaliveEnable,
@@ -73,7 +73,7 @@ public class Kafka
 
         if (sasl.UseSasl)
         {
-            config.SaslMechanism = SetSaslMechanism(sasl);
+            config.SaslMechanism = GetSaslMechanism(sasl);
             config.SaslUsername = sasl.SaslUsername;
             config.SaslPassword = sasl.SaslPassword;
             config.SaslOauthbearerMethod = GetSaslOauthbearerMethod(sasl);
@@ -89,9 +89,9 @@ public class Kafka
             config.SaslKerberosServiceName = sasl.SaslKerberosServiceName;
         }
 
-        if (ssl.UseSSL)
+        if (ssl.UseSsl)
         {
-            config.SslEndpointIdentificationAlgorithm = SetSslEndpointIdentificationAlgorithm(ssl);
+            config.SslEndpointIdentificationAlgorithm = GetSslEndpointIdentificationAlgorithm(ssl);
             config.EnableSslCertificateVerification = ssl.EnableSslCertificateVerification;
             config.SslCertificateLocation = String.IsNullOrWhiteSpace(ssl.SslCertificateLocation) ? "" : ssl.SslCertificateLocation;
             config.SslCertificatePem = String.IsNullOrWhiteSpace(ssl.SslCertificatePem) ? "" : ssl.SslCertificatePem;
@@ -112,7 +112,7 @@ public class Kafka
 
         return config;
     }
-    private static SecurityProtocol SetSecurityProtocol(Input input)
+    private static SecurityProtocol GetSecurityProtocol(Input input)
     {
         return input.SecurityProtocol switch
         {
@@ -124,7 +124,7 @@ public class Kafka
         };
     }
 
-    private static SslEndpointIdentificationAlgorithm SetSslEndpointIdentificationAlgorithm(Ssl ssl)
+    private static SslEndpointIdentificationAlgorithm GetSslEndpointIdentificationAlgorithm(Ssl ssl)
     {
         return ssl.SslEndpointIdentificationAlgorithm switch
         {
@@ -134,7 +134,7 @@ public class Kafka
         };
     }
 
-    private static CompressionType SetCompressionType(Input input)
+    private static CompressionType GetCompressionType(Input input)
     {
         return input.CompressionType switch
         {
@@ -147,7 +147,7 @@ public class Kafka
         };
     }
 
-    private static Acks SetAcks(Options options)
+    private static Acks GetAcks(Options options)
     {
         return options.Acks switch
         {
@@ -158,7 +158,7 @@ public class Kafka
         };
     }
 
-    private static Partitioner SetPartitioner(Options options)
+    private static Partitioner GetPartitioner(Options options)
     {
         return options.Partitioner switch
         {
@@ -181,7 +181,7 @@ public class Kafka
         };
     }
 
-    private static SaslMechanism SetSaslMechanism(Sasl sasl)
+    private static SaslMechanism GetSaslMechanism(Sasl sasl)
     {
         return sasl.SaslMechanism switch
         {
