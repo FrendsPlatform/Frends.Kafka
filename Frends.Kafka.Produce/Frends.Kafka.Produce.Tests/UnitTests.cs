@@ -29,7 +29,7 @@ public class UnitTests
             Message = _message,
             Host = _hostPlaintext,
             Topic = _topic,
-        };
+        }; 
 
         var _options = new Options();
         var _socket = new Socket();
