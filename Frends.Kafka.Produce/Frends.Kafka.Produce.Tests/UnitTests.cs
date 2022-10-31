@@ -52,7 +52,7 @@ public class UnitTests
         var _options = new Options()
         {
             MessageTimeoutMs = 1
-        };
+        }; 
 
         var _socket = new Socket();
 
