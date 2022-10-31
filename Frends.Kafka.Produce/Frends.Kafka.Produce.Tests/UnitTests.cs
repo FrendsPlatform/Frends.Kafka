@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Frends.Kafka.Produce.Definitions;
+using Confluent.Kafka;
 
 namespace Frends.Kafka.Produce.Tests;
 

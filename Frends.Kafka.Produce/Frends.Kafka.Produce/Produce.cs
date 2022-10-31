@@ -37,9 +37,13 @@ public class Kafka
 
             return new Result(true, result.Status.ToString(), result.Timestamp.UtcDateTime.ToString());
         }
+        catch(KafkaException ke)
+        {
+            throw new Exception($"Produce KafkaException: {ke}");
+        }
         catch (Exception ex)
         {
-            throw new Exception($"Produce error: {ex}");
+            throw new Exception($"Produce Exception: {ex}");
         }
     }
 
