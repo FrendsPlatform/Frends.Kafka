@@ -54,7 +54,7 @@ public enum Ack
 public enum Partitioners
 {
     /// <summary>
-    /// random distribution.
+    /// Random distribution.
     /// </summary>
     Random,
 
