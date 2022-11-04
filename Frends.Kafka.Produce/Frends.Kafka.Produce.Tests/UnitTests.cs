@@ -35,8 +35,8 @@ public class UnitTests
         var _socket = new Socket();
 
         var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
-        Assert.IsTrue(result.Success.Equals(true));
-        Assert.IsTrue(result.Timestamp != null);
+        Assert.IsTrue(result.Success);
+        Assert.IsTrue(!string.IsNullOrEmpty(result.Timestamp));
     }
 
     [TestMethod]
@@ -57,6 +57,6 @@ public class UnitTests
         var _socket = new Socket();
 
         var ex = await Assert.ThrowsExceptionAsync<Exception>(() => Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default));
-        Assert.IsTrue(ex.Message != null);
+        Assert.IsTrue(!string.IsNullOrEmpty(ex.Message));
     }
 }
