@@ -1,0 +1,18 @@
+name: Produce build main
+
+on:
+  push:
+    branches:    
+      - main
+    paths:
+      - 'Frends.Kafka.Produce/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: FrendsPlatform/FrendsTasks/.github/workflows/linux_build_main.yml@main
+    with:
+      workdir: Frends.Kafka.Produce
+      prebuild_command: docker-compose -f ./Frends.Kafka.Produce.Tests/Files/docker-compose.yml up -d
+    secrets:
+      badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
