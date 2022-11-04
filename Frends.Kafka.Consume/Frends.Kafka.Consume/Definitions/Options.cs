@@ -59,7 +59,7 @@ public class Options
     /// <summary>
     /// Action to take when there is no initial offset in offset store or the desired offset is out of range.
     /// </summary>
-    /// <example>AutoOffsetResets.
+    /// <example>AutoOffsetResets.</example>
     [DefaultValue(AutoOffsetResets.Latest)]
     public AutoOffsetResets AutoOffsetReset { get; set; }
 
