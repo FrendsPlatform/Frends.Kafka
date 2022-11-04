@@ -1,5 +1,5 @@
 # Frends.Kafka.Produce
-Frends task for Kafka produce operation.
+Frends Task for Kafka produce operation.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Build](https://github.com/FrendsPlatform/Frends.Kafka/actions/workflows/Produce_build_and_test_on_main.yml/badge.svg)](https://github.com/FrendsPlatform/Frends.Kafka/actions)

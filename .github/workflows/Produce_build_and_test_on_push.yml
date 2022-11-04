@@ -3,7 +3,7 @@ name: Produce build test
 on:
   push:
     branches-ignore: 
-      - master
+      - main
     paths:
       - 'Frends.Kafka.Produce/**'
   workflow_dispatch:

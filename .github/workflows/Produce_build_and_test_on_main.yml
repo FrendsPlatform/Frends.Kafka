@@ -3,7 +3,7 @@ name: Produce build main
 on:
   push:
     branches:    
-      - master
+      - main
     paths:
       - 'Frends.Kafka.Produce/**'
   workflow_dispatch:

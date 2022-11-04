@@ -1,6 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Frends.Kafka.Produce.Definitions;
-using Confluent.Kafka;
 
 namespace Frends.Kafka.Produce.Tests;
 
@@ -36,7 +35,8 @@ public class UnitTests
         var _socket = new Socket();
 
         var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
-        Assert.IsTrue(result.Success.Equals(true) && result.Timestamp != null);
+        Assert.IsTrue(result.Success.Equals(true));
+        Assert.IsTrue(result.Timestamp != null);
     }
 
     [TestMethod]

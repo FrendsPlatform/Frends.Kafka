@@ -54,12 +54,4 @@ public class Socket
     /// <example>0</example>
     [DefaultValue(0)]
     public int SocketReceiveBufferBytes { get; set; }
-
-    /// <summary>
-    /// Broker socket Produce buffer size. 
-    /// 0 = System default.
-    /// </summary>
-    /// <example>0</example>
-    [DefaultValue(0)]
-    public int SocketProduceBufferBytes { get; set; }
 }
