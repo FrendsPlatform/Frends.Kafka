@@ -13,7 +13,7 @@ public class UnitTests
         Run command 'docker-compose up -d' in .\Frends.Kafka.Consume.Tests\Files\ 
         
         Read message(s) from topic:
-        docker exec --interactive --tty broker kafka-console-consumer --bootstrap-server localhost:9092 --topic ConsumeTopic --from-beginning
+        docker exec --interactive --tty "container's name" kafka-console-consumer --bootstrap-server localhost:9092 --topic ConsumeTopic --from-beginning
     */
 
     private readonly string _hostPlaintext = "localhost:9092";
@@ -24,7 +24,7 @@ public class UnitTests
     readonly Ssl? _ssl = new() { UseSsl = false };
 
     [TestMethod]
-    public async Task Kafka_Product_Test()
+    public async Task Kafka_Consume_Test()
     {
         await ProduceTestMessage();
 
@@ -34,7 +34,7 @@ public class UnitTests
             Topic = _topic,
             SecurityProtocol = SecurityProtocols.Plaintext,
             MessageCount = 10,
-            Timeout = 5000,
+            Timeout = 10000,
         };
 
         var _options = new Options()
@@ -82,11 +82,11 @@ public class UnitTests
         var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
         Assert.IsTrue(result.Success);
         Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
-        Assert.AreEqual(result.Messages.Count == 2, result.Messages.Count);
+        Assert.AreEqual(2, result.Messages.Count);
     }
 
     [TestMethod]
-    public void Kafka_Product_WithoutMessages_NoError_Test()
+    public void Kafka_Consume_WithoutMessages_NoError_Test()
     {
         var _input = new Input()
         {
@@ -141,14 +141,14 @@ public class UnitTests
 
         var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
         Assert.IsTrue(result.Success);
-        Assert.AreEqual(result.Messages.Count == 0, result.Messages.Count);
+        Assert.AreEqual(0, result.Messages.Count);
     }
 
     private async Task ProduceTestMessage()
-    {
-        ProducerConfig config = new() { BootstrapServers = _hostPlaintext };
-        using var producer = new ProducerBuilder<Null, string>(config).Build();
-        for (int i = 0; i < 2; i++) 
+        {
+            ProducerConfig config = new() { BootstrapServers = _hostPlaintext };
+            using var producer = new ProducerBuilder<Null, string>(config).Build();
+            for (int i = 0; i < 2; i++) 
             await producer.ProduceAsync(_topic, new Message<Null, string> { Value = JsonSerializer.Serialize(_message + i.ToString()) });
     }
 }
