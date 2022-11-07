@@ -82,7 +82,7 @@ public class UnitTests
         var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
         Assert.IsTrue(result.Success);
         Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
-        Assert.IsTrue(result.Messages.Count == 2);
+        Assert.AreEqual(result.Messages.Count == 2, result.Messages.Count);
     }
 
     [TestMethod]
@@ -141,7 +141,7 @@ public class UnitTests
 
         var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
         Assert.IsTrue(result.Success);
-        Assert.IsTrue(result.Messages.Count == 0);
+        Assert.AreEqual(result.Messages.Count == 0, result.Messages.Count);
     }
 
     private async Task ProduceTestMessage()
