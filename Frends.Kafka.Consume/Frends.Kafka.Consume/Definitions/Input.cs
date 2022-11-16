@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace Frends.Kafka.Consume.Definitions;
 
@@ -25,6 +26,15 @@ public class Input
     /// <example>SecurityProtocols.Plaintext</example>
     [DefaultValue(SecurityProtocols.Plaintext)]
     public SecurityProtocols SecurityProtocol { get; set; }
+
+    [DefaultValue(false)]
+    public bool UseSchemaRegistry { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    [UIHint(nameof(UseSchemaRegistry), "", true)]
+    public string SchemaRegistryUrl { get; set; }
 
     /// <summary>
     /// Amount of consumed messages before ending this task.

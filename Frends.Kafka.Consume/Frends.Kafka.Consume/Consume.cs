@@ -2,6 +2,9 @@
 using System.ComponentModel;
 using System;
 using Confluent.Kafka;
+using Confluent.Kafka.SyncOverAsync;
+using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
 using System.Threading;
 using System.Collections.Generic;
 
@@ -31,33 +34,71 @@ public class Kafka
         var result = new List<Message>();
         var config = Configurations(input, options, socket, sasl, ssl);
 
-        using var consumer = new ConsumerBuilder<Null, string>(config).Build();
-        consumer.Subscribe(input.Topic);
-        try
+        if (input.UseSchemaRegistry)
         {
-            while (result.Count < input.MessageCount)
+            var schemaRegistryConfig = new SchemaRegistryConfig { Url = input.SchemaRegistryUrl };
+            using var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
+            using var consumer = new ConsumerBuilder<Null, string>(config)
+                .SetValueDeserializer(new AvroDeserializer<string>(schemaRegistry).AsSyncOverAsync())
+                .Build();
+            consumer.Subscribe(input.Topic);
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                var cr = input.Timeout > 0 ? consumer.Consume(input.Timeout) : consumer.Consume(cancellationToken);
+                while (result.Count < input.MessageCount)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var cr = input.Timeout > 0 ? consumer.Consume(input.Timeout) : consumer.Consume(cancellationToken);
 
-                if (cr != null)
-                    result.Add(new Message()
-                    {
-                        Key = cr.Message.Key?.ToString(),
-                        Value = cr.Message.Value,
-                    });
-                else
-                    break;
+                    if (cr != null)
+                        result.Add(new Message()
+                        {
+                            Key = cr.Message.Key?.ToString(),
+                            Value = cr.Message.Value,
+                        });
+                    else
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Consume error: {ex}");
+            }
+            finally
+            {
+                consumer.Close();
             }
         }
-        catch (Exception ex)
+        else
         {
-            throw new Exception($"Consume error: {ex}");
+            using var consumer = new ConsumerBuilder<Null, string>(config).Build();
+            consumer.Subscribe(input.Topic);
+            try
+            {
+                while (result.Count < input.MessageCount)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var cr = input.Timeout > 0 ? consumer.Consume(input.Timeout) : consumer.Consume(cancellationToken);
+
+                    if (cr != null)
+                        result.Add(new Message()
+                        {
+                            Key = cr.Message.Key?.ToString(),
+                            Value = cr.Message.Value,
+                        });
+                    else
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Consume error: {ex}");
+            }
+            finally
+            {
+                consumer.Close();
+            }
         }
-        finally
-        {
-            consumer.Close();
-        }
+        
 
         return new Result(true, result);
     }
