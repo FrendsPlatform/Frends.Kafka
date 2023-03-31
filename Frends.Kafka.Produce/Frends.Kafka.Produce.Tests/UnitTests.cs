@@ -59,4 +59,36 @@ public class UnitTests
         var ex = await Assert.ThrowsExceptionAsync<Exception>(() => Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default));
         Assert.IsTrue(!string.IsNullOrEmpty(ex.Message));
     }
+
+    [TestMethod]
+    public async Task Kafka_ProduceSSL()
+    {
+        var ssl = new Ssl
+        {
+            UseSsl = true,
+            EnableSslCertificateVerification = true,
+            SslCaCertificateStores = "",
+            SslCaLocation = "",
+            SslCaPem = "",
+            SslCertificateLocation = "",
+            SslCertificatePem = "",
+            SslCipherSuites = "",
+            SslCrlLocation = "",
+            SslCurvesList = ""
+        };
+
+        var input = new Input()
+        {
+            Message = _message,
+            Host = _hostPlaintext,
+            Topic = _topic,
+        };
+
+        var options = new Options();
+        var socket = new Socket();
+
+        var result = await Kafka.Produce(input, options, socket, _sasl, ssl, default);
+        Assert.IsTrue(result.Success);
+        Assert.IsTrue(!string.IsNullOrEmpty(result.Timestamp));
+    }
 }
