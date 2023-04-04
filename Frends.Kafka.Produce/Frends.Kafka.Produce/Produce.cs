@@ -1,6 +1,7 @@
 ﻿using Frends.Kafka.Produce.Definitions;
 using System.ComponentModel;
 using System;
+using System.Runtime.InteropServices;
 using Confluent.Kafka;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -37,7 +38,7 @@ public class Kafka
 
             return new Result(true, result.Status.ToString(), result.Timestamp.UtcDateTime.ToString());
         }
-        catch(KafkaException ke)
+        catch (KafkaException ke)
         {
             throw new Exception($"Produce KafkaException: {ke}");
         }
@@ -77,6 +78,8 @@ public class Kafka
 
         if (sasl.UseSasl)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                throw new NotImplementedException("Sasl is implemented only only on Linux OS.");
             config.SaslMechanism = GetSaslMechanism(sasl);
             config.SaslUsername = sasl.SaslUsername;
             config.SaslPassword = sasl.SaslPassword;
