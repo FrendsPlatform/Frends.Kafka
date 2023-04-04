@@ -9,7 +9,7 @@ using System.Threading;
 namespace Frends.Kafka.Produce;
 
 /// <summary>
-/// Kafka task.
+/// Kafka task
 /// </summary>
 public class Kafka
 {
