@@ -123,6 +123,6 @@ public class UnitTests
             var result = await Kafka.Produce(input, options, socket, sasl, _ssl, default);
             Assert.IsTrue(result.Success);
             Assert.IsTrue(!string.IsNullOrEmpty(result.Timestamp));
-        } 
+        }
     }
 }
