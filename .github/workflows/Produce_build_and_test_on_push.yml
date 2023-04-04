@@ -13,7 +13,7 @@ jobs:
     uses: FrendsPlatform/FrendsTasks/.github/workflows/linux_build_test.yml@main
     with:
       workdir: Frends.Kafka.Produce
-      prebuild_command: docker-compose -f ./Frends.Kafka.Produce.Tests/Files/docker-compose.yml up -d
+      prebuild_command: ./Frends.Kafka.Producer.Tests/Prebuild/prebuildCommand.sh
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
       test_feed_api_key: ${{ secrets.TASKS_TEST_FEED_API_KEY }}
@@ -21,7 +21,7 @@ jobs:
     uses: FrendsPlatform/FrendsTasks/.github/workflows/build_test.yml@main
     with:
       workdir: Frends.Kafka.Produce
-      prebuild_command: docker-compose -f ./Frends.Kafka.Produce.Tests/Files/docker-compose.yml up -d
+      prebuild_command: .\Frends.Kafka.Produce.Tests\Prebuild\prebuildCommand.ps1
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
       test_feed_api_key: ${{ secrets.TASKS_TEST_FEED_API_KEY }}

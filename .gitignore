@@ -250,3 +250,9 @@ Frends.Community.*/Frends.Community.*/Frends.Community.*.xml
 
 # PowerShell scripts
 *.ps1
+
+# Docker-compose file
+docker-compose.yml
+
+# Allow
+!prebuildCommand.*

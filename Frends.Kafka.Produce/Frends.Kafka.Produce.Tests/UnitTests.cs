@@ -7,8 +7,9 @@ namespace Frends.Kafka.Produce.Tests;
 public class UnitTests
 {
     /*
-        Docker compose:
-        Run command 'docker-compose up -d' in Frends.Kafka.Produce.Tests\Files\ 
+        Run command:
+        - on linux/git bash: ./Frends.Kafka.Produce.Test/Prebuild/prebuildCommand.sh
+        - on windows: .\Frends.Kafka.Produce.Tests\Prebuild\prebuildCommand.ps1
         
         Read message(s) from topic:
         docker exec --interactive --tty broker kafka-console-consumer --bootstrap-server localhost:9092 --topic TestTopic --from-beginning
