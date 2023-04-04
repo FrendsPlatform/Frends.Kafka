@@ -91,4 +91,30 @@ public class UnitTests
         Assert.IsTrue(result.Success);
         Assert.IsTrue(!string.IsNullOrEmpty(result.Timestamp));
     }
+
+    [TestMethod]
+    public async Task Kafka_ProduceSaSL()
+    {
+        var sasl = new Sasl
+        {
+            UseSasl = true,
+            SaslMechanism = SaslMechanisms.Plain,
+            SaslKerberosPrincipal = "",
+            SaslKerberosServiceName = ""
+        };
+
+        var input = new Input()
+        {
+            Message = _message,
+            Host = _hostPlaintext,
+            Topic = _topic,
+        };
+
+        var options = new Options();
+        var socket = new Socket();
+
+        var result = await Kafka.Produce(input, options, socket, sasl, _ssl, default);
+        Assert.IsTrue(result.Success);
+        Assert.IsTrue(!string.IsNullOrEmpty(result.Timestamp));
+    }
 }

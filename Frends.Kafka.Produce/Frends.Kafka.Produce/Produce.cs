@@ -99,7 +99,7 @@ public class Kafka
             config.EnableSslCertificateVerification = ssl.EnableSslCertificateVerification;
             config.SslCertificateLocation = string.IsNullOrWhiteSpace(ssl.SslCertificateLocation) ? "" : ssl.SslCertificateLocation;
             config.SslCertificatePem = string.IsNullOrWhiteSpace(ssl.SslCertificatePem) ? "" : ssl.SslCertificatePem;
-            if (!string.IsNullOrEmpty(ssl.SslCertificatePem))
+            if (!string.IsNullOrEmpty(ssl.SslCaCertificateStores))
                 config.SslCaCertificateStores = ssl.SslCaCertificateStores;
             config.SslCaLocation = string.IsNullOrWhiteSpace(ssl.SslCaLocation) ? "" : ssl.SslCaLocation;
             config.SslCaPem = string.IsNullOrWhiteSpace(ssl.SslCaPem) ? "" : ssl.SslCaPem;
