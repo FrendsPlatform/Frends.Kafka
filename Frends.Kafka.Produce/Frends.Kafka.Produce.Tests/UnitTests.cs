@@ -8,6 +8,7 @@ public class UnitTests
 {
     /*
         Run command:
+
         - on linux/git bash: ./Frends.Kafka.Produce.Test/Prebuild/prebuildCommand.sh
         - on windows: .\Frends.Kafka.Produce.Tests\Prebuild\prebuildCommand.ps1
         
