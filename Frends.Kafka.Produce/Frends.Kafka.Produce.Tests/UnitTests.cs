@@ -1,9 +1,10 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Frends.Kafka.Produce.Definitions;
+using System.Runtime.InteropServices;
+using NUnit.Framework;
 
 namespace Frends.Kafka.Produce.Tests;
 
-[TestClass]
+[TestFixture]
 public class UnitTests
 {
     /*
@@ -23,15 +24,15 @@ public class UnitTests
     readonly Sasl? _sasl = new() { UseSasl = false };
     readonly Ssl? _ssl = new() { UseSsl = false };
 
-    [TestMethod]
+    [Test]
     public async Task Kafka_Produce_Test()
     {
         var _input = new Input()
         {
             Message = _message,
             Host = _hostPlaintext,
-            Topic = _topic,
-        }; 
+            Topic = _topic
+        };
 
         var _options = new Options();
         var _socket = new Socket();
@@ -41,8 +42,8 @@ public class UnitTests
         Assert.IsTrue(!string.IsNullOrEmpty(result.Timestamp));
     }
 
-    [TestMethod]
-    public async Task Kafka_ErrorHandling_Test()
+    [Test]
+    public void Kafka_ErrorHandling_Test()
     {
         var _input = new Input()
         {
@@ -54,15 +55,15 @@ public class UnitTests
         var _options = new Options()
         {
             MessageTimeoutMs = 1
-        }; 
+        };
 
         var _socket = new Socket();
 
-        var ex = await Assert.ThrowsExceptionAsync<Exception>(() => Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default));
+        var ex = Assert.ThrowsAsync<Exception>(() => Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default));
         Assert.IsTrue(!string.IsNullOrEmpty(ex.Message));
     }
 
-    [TestMethod]
+    [Test]
     public async Task Kafka_ProduceSSL()
     {
         var ssl = new Ssl
@@ -94,29 +95,34 @@ public class UnitTests
         Assert.IsTrue(!string.IsNullOrEmpty(result.Timestamp));
     }
 
-    [TestMethod]
+    [Test]
     public async Task Kafka_ProduceSaSL()
     {
-        var sasl = new Sasl
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            Assert.Ignore("Sasl is not supported on Windows.");
+        else
         {
-            UseSasl = true,
-            SaslMechanism = SaslMechanisms.Plain,
-            SaslKerberosPrincipal = "",
-            SaslKerberosServiceName = ""
-        };
+            var sasl = new Sasl
+            {
+                UseSasl = true,
+                SaslMechanism = SaslMechanisms.Plain,
+                SaslKerberosPrincipal = "",
+                SaslKerberosServiceName = ""
+            };
 
-        var input = new Input()
-        {
-            Message = _message,
-            Host = _hostPlaintext,
-            Topic = _topic,
-        };
+            var input = new Input()
+            {
+                Message = _message,
+                Host = _hostPlaintext,
+                Topic = _topic,
+            };
 
-        var options = new Options();
-        var socket = new Socket();
+            var options = new Options();
+            var socket = new Socket();
 
-        var result = await Kafka.Produce(input, options, socket, sasl, _ssl, default);
-        Assert.IsTrue(result.Success);
-        Assert.IsTrue(!string.IsNullOrEmpty(result.Timestamp));
+            var result = await Kafka.Produce(input, options, socket, sasl, _ssl, default);
+            Assert.IsTrue(result.Success);
+            Assert.IsTrue(!string.IsNullOrEmpty(result.Timestamp));
+        } 
     }
 }
