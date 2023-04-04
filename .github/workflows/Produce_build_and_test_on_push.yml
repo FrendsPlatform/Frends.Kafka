@@ -16,6 +16,7 @@ jobs:
       prebuild_command: docker-compose -f ./Frends.Kafka.Produce.Tests/Files/docker-compose.yml up -d
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
+      test_feed_api_key: ${{ secrets.TASKS_TEST_FEED_API_KEY }}
   windows_build:
     uses: FrendsPlatform/FrendsTasks/.github/workflows/build_test.yml@main
     with:
@@ -23,3 +24,4 @@ jobs:
       prebuild_command: docker-compose -f ./Frends.Kafka.Produce.Tests/Files/docker-compose.yml up -d
     secrets:
       badge_service_api_key: ${{ secrets.BADGE_SERVICE_API_KEY }}
+      test_feed_api_key: ${{ secrets.TASKS_TEST_FEED_API_KEY }}
