@@ -58,6 +58,7 @@ public class Kafka
         finally
         {
             consumer.Close();
+            consumer.Dispose();
         }
 
         return new Result(true, result);
@@ -84,8 +85,8 @@ public class Kafka
             FetchMaxBytes = options.FetchMaxBytes,
             FetchMinBytes = options.FetchMinBytes,
             FetchWaitMaxMs = options.FetchWaitMaxMs,
-            GroupId = String.IsNullOrWhiteSpace(options.GroupId) ? "string" : options.GroupId,
-            GroupInstanceId = String.IsNullOrWhiteSpace(options.GroupInstanceId) ? "" : options.GroupInstanceId,
+            GroupId = string.IsNullOrWhiteSpace(options.GroupId) ? "string" : options.GroupId,
+            GroupInstanceId = string.IsNullOrWhiteSpace(options.GroupInstanceId) ? "" : options.GroupInstanceId,
             HeartbeatIntervalMs = options.HeartbeatIntervalMs,
             IsolationLevel = GetIsolationLevel(options),
             MaxPollIntervalMs = options.MaxPollIntervalMs,
