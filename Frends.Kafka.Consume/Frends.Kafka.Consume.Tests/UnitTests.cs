@@ -24,12 +24,14 @@ public class UnitTests
     readonly Sasl? _sasl = new() { UseSasl = false };
     readonly Ssl? _ssl = new() { UseSsl = false };
 
-    [Test]
-    public async Task Kafka_Consume_Test()
-    {
-        await ProduceTestMessage();
+    private static Input _input;
+    private static Options _options;
+    private static Socket _socket;
 
-        var _input = new Input()
+    [SetUp]
+    public void Setup()
+    {
+        _input = new Input()
         {
             Host = _hostPlaintext,
             Topic = _topic,
@@ -38,7 +40,7 @@ public class UnitTests
             Timeout = 10000,
         };
 
-        var _options = new Options()
+        _options = new Options()
         {
             Acks = Ack.None,
             MaxInFlight = 1000000,
@@ -70,7 +72,62 @@ public class UnitTests
             MaxPollIntervalMs = 20000,
         };
 
-        var _socket = new Socket()
+        _socket = new Socket()
+        {
+            SocketConnectionSetupTimeoutMs = 30000,
+            SocketKeepaliveEnable = false,
+            SocketMaxFails = 1,
+            SocketNagleDisable = false,
+            SocketReceiveBufferBytes = 0,
+            SocketTimeoutMs = 10000,
+        };
+    }
+
+    [TearDown]
+    public void Teardown()
+    {
+        _input = new Input()
+        {
+            Host = _hostPlaintext,
+            Topic = _topic,
+            SecurityProtocol = SecurityProtocols.Plaintext,
+            MessageCount = 10,
+            Timeout = 10000,
+        };
+
+        _options = new Options()
+        {
+            Acks = Ack.None,
+            MaxInFlight = 1000000,
+            MessageMaxBytes = 1000000,
+            ConnectionsMaxIdleMs = 10000,
+            AllowAutoCreateTopics = false,
+            ApiVersionFallbackMs = 0,
+            ApiVersionRequest = true,
+            ApiVersionRequestTimeoutMs = 10000,
+            AutoCommitIntervalMs = 5000,
+            AutoOffsetReset = AutoOffsetResets.Earliest,
+            BrokerAddressFamily = BrokerAddressFamilys.Any,
+            EnableAutoCommit = true,
+            EnableAutoOffsetStore = true,
+            CheckCrcs = false,
+            FetchErrorBackoffMs = 500,
+            FetchMaxBytes = 52428800,
+            FetchMinBytes = 1,
+            FetchWaitMaxMs = 500,
+            GroupId = null,
+            GroupInstanceId = null,
+            HeartbeatIntervalMs = 3000,
+            IsolationLevel = IsolationLevels.ReadUncommitted,
+            QueuedMaxMessagesKbytes = 65536,
+            QueuedMinMessages = 1,
+            ReconnectBackoffMaxMs = 10000,
+            ReconnectBackoffMs = 100,
+            SessionTimeoutMs = 10000,
+            MaxPollIntervalMs = 20000,
+        };
+
+        _socket = new Socket()
         {
             SocketConnectionSetupTimeoutMs = 30000,
             SocketKeepaliveEnable = false,
@@ -80,6 +137,13 @@ public class UnitTests
             SocketTimeoutMs = 10000,
         };
 
+        Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
+    }
+
+    [Test]
+    public async Task Kafka_Consume_Test()
+    {
+        await ProduceTestMessage();
         var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
         Assert.IsTrue(result.Success);
         Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
@@ -89,57 +153,6 @@ public class UnitTests
     [Test]
     public void Kafka_Consume_WithoutMessages_NoError_Test()
     {
-        var _input = new Input()
-        {
-            Host = _hostPlaintext,
-            Topic = _topic,
-            SecurityProtocol = SecurityProtocols.Plaintext,
-            MessageCount = 10,
-            Timeout = 5000,
-        };
-
-        var _options = new Options()
-        {
-            Acks = Ack.None,
-            MaxInFlight = 1000000,
-            MessageMaxBytes = 1000000,
-            ConnectionsMaxIdleMs = 10000,
-            AllowAutoCreateTopics = false,
-            ApiVersionFallbackMs = 0,
-            ApiVersionRequest = true,
-            ApiVersionRequestTimeoutMs = 10000,
-            AutoCommitIntervalMs = 5000,
-            AutoOffsetReset = AutoOffsetResets.Earliest,
-            BrokerAddressFamily = BrokerAddressFamilys.Any,
-            EnableAutoCommit = true,
-            EnableAutoOffsetStore = true,
-            CheckCrcs = false,
-            FetchErrorBackoffMs = 500,
-            FetchMaxBytes = 52428800,
-            FetchMinBytes = 1,
-            FetchWaitMaxMs = 500,
-            GroupId = null,
-            GroupInstanceId = null,
-            HeartbeatIntervalMs = 3000,
-            IsolationLevel = IsolationLevels.ReadUncommitted,
-            QueuedMaxMessagesKbytes = 65536,
-            QueuedMinMessages = 1,
-            ReconnectBackoffMaxMs = 10000,
-            ReconnectBackoffMs = 100,
-            SessionTimeoutMs = 10000,
-            MaxPollIntervalMs = 20000,
-        };
-
-        var _socket = new Socket()
-        {
-            SocketConnectionSetupTimeoutMs = 30000,
-            SocketKeepaliveEnable = false,
-            SocketMaxFails = 1,
-            SocketNagleDisable = false,
-            SocketReceiveBufferBytes = 0,
-            SocketTimeoutMs = 10000,
-        };
-
         var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
         Assert.IsTrue(result.Success);
         Assert.AreEqual(0, result.Messages.Count);
@@ -148,6 +161,8 @@ public class UnitTests
     [Test]
     public async Task Kafka_ProduceSSL()
     {
+        await ProduceTestMessage();
+
         var ssl = new Ssl
         {
             UseSsl = true,
@@ -162,136 +177,7 @@ public class UnitTests
             SslCurvesList = ""
         };
 
-        await ProduceTestMessage();
-
-        var _input = new Input()
-        {
-            Host = _hostPlaintext,
-            Topic = _topic,
-            SecurityProtocol = SecurityProtocols.Plaintext,
-            MessageCount = 10,
-            Timeout = 10000,
-        };
-
-        var _options = new Options()
-        {
-            Acks = Ack.None,
-            MaxInFlight = 1000000,
-            MessageMaxBytes = 1000000,
-            ConnectionsMaxIdleMs = 10000,
-            AllowAutoCreateTopics = false,
-            ApiVersionFallbackMs = 0,
-            ApiVersionRequest = true,
-            ApiVersionRequestTimeoutMs = 10000,
-            AutoCommitIntervalMs = 5000,
-            AutoOffsetReset = AutoOffsetResets.Earliest,
-            BrokerAddressFamily = BrokerAddressFamilys.Any,
-            EnableAutoCommit = true,
-            EnableAutoOffsetStore = true,
-            CheckCrcs = false,
-            FetchErrorBackoffMs = 500,
-            FetchMaxBytes = 52428800,
-            FetchMinBytes = 1,
-            FetchWaitMaxMs = 500,
-            GroupId = null,
-            GroupInstanceId = null,
-            HeartbeatIntervalMs = 3000,
-            IsolationLevel = IsolationLevels.ReadUncommitted,
-            QueuedMaxMessagesKbytes = 65536,
-            QueuedMinMessages = 1,
-            ReconnectBackoffMaxMs = 10000,
-            ReconnectBackoffMs = 100,
-            SessionTimeoutMs = 10000,
-            MaxPollIntervalMs = 20000,
-        };
-
-        var _socket = new Socket()
-        {
-            SocketConnectionSetupTimeoutMs = 30000,
-            SocketKeepaliveEnable = false,
-            SocketMaxFails = 1,
-            SocketNagleDisable = false,
-            SocketReceiveBufferBytes = 0,
-            SocketTimeoutMs = 10000,
-        };
-
-        var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
-        Assert.IsTrue(result.Success);
-        Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
-        Assert.AreEqual(2, result.Messages.Count);
-    }
-
-    [Test]
-    public async Task Kafka_ProduceSSL()
-    {
-        var ssl = new Ssl
-        {
-            UseSsl = true,
-            EnableSslCertificateVerification = true,
-            SslCaCertificateStores = "",
-            SslCaLocation = "",
-            SslCaPem = "",
-            SslCertificateLocation = "",
-            SslCertificatePem = "",
-            SslCipherSuites = "",
-            SslCrlLocation = "",
-            SslCurvesList = ""
-        };
-
-        await ProduceTestMessage();
-
-        var _input = new Input()
-        {
-            Host = _hostPlaintext,
-            Topic = _topic,
-            SecurityProtocol = SecurityProtocols.Ssl,
-            MessageCount = 10,
-            Timeout = 10000,
-        };
-
-        var _options = new Options()
-        {
-            Acks = Ack.None,
-            MaxInFlight = 1000000,
-            MessageMaxBytes = 1000000,
-            ConnectionsMaxIdleMs = 10000,
-            AllowAutoCreateTopics = false,
-            ApiVersionFallbackMs = 0,
-            ApiVersionRequest = true,
-            ApiVersionRequestTimeoutMs = 10000,
-            AutoCommitIntervalMs = 5000,
-            AutoOffsetReset = AutoOffsetResets.Earliest,
-            BrokerAddressFamily = BrokerAddressFamilys.Any,
-            EnableAutoCommit = true,
-            EnableAutoOffsetStore = true,
-            CheckCrcs = false,
-            FetchErrorBackoffMs = 500,
-            FetchMaxBytes = 52428800,
-            FetchMinBytes = 1,
-            FetchWaitMaxMs = 500,
-            GroupId = null,
-            GroupInstanceId = null,
-            HeartbeatIntervalMs = 3000,
-            IsolationLevel = IsolationLevels.ReadUncommitted,
-            QueuedMaxMessagesKbytes = 65536,
-            QueuedMinMessages = 1,
-            ReconnectBackoffMaxMs = 10000,
-            ReconnectBackoffMs = 100,
-            SessionTimeoutMs = 10000,
-            MaxPollIntervalMs = 20000,
-        };
-
-        var _socket = new Socket()
-        {
-            SocketConnectionSetupTimeoutMs = 30000,
-            SocketKeepaliveEnable = false,
-            SocketMaxFails = 1,
-            SocketNagleDisable = false,
-            SocketReceiveBufferBytes = 0,
-            SocketTimeoutMs = 10000,
-        };
-
-        var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
+        var result = Kafka.Consume(_input, _options, _socket, _sasl, ssl, default);
         Assert.IsTrue(result.Success);
         Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
         Assert.AreEqual(2, result.Messages.Count);
@@ -304,6 +190,8 @@ public class UnitTests
             Assert.Ignore("Sasl is not supported on Windows.");
         else
         {
+            await ProduceTestMessage();
+
             var sasl = new Sasl
             {
                 UseSasl = true,
@@ -312,60 +200,7 @@ public class UnitTests
                 SaslKerberosServiceName = ""
             };
 
-            await ProduceTestMessage();
-
-            var _input = new Input()
-            {
-                Host = _hostPlaintext,
-                Topic = _topic,
-                SecurityProtocol = SecurityProtocols.Plaintext,
-                MessageCount = 10,
-                Timeout = 10000,
-            };
-
-            var _options = new Options()
-            {
-                Acks = Ack.None,
-                MaxInFlight = 1000000,
-                MessageMaxBytes = 1000000,
-                ConnectionsMaxIdleMs = 10000,
-                AllowAutoCreateTopics = false,
-                ApiVersionFallbackMs = 0,
-                ApiVersionRequest = true,
-                ApiVersionRequestTimeoutMs = 10000,
-                AutoCommitIntervalMs = 5000,
-                AutoOffsetReset = AutoOffsetResets.Earliest,
-                BrokerAddressFamily = BrokerAddressFamilys.Any,
-                EnableAutoCommit = true,
-                EnableAutoOffsetStore = true,
-                CheckCrcs = false,
-                FetchErrorBackoffMs = 500,
-                FetchMaxBytes = 52428800,
-                FetchMinBytes = 1,
-                FetchWaitMaxMs = 500,
-                GroupId = null,
-                GroupInstanceId = null,
-                HeartbeatIntervalMs = 3000,
-                IsolationLevel = IsolationLevels.ReadUncommitted,
-                QueuedMaxMessagesKbytes = 65536,
-                QueuedMinMessages = 1,
-                ReconnectBackoffMaxMs = 10000,
-                ReconnectBackoffMs = 100,
-                SessionTimeoutMs = 10000,
-                MaxPollIntervalMs = 20000,
-            };
-
-            var _socket = new Socket()
-            {
-                SocketConnectionSetupTimeoutMs = 30000,
-                SocketKeepaliveEnable = false,
-                SocketMaxFails = 1,
-                SocketNagleDisable = false,
-                SocketReceiveBufferBytes = 0,
-                SocketTimeoutMs = 10000,
-            };
-
-            var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
+            var result = Kafka.Consume(_input, _options, _socket, sasl, _ssl, default);
             Assert.IsTrue(result.Success);
             Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
             Assert.AreEqual(2, result.Messages.Count);
@@ -379,6 +214,8 @@ public class UnitTests
             Assert.Ignore("Sasl is not supported on Windows.");
         else
         {
+            await ProduceTestMessage();
+
             var sasl = new Sasl
             {
                 UseSasl = true,
@@ -387,60 +224,9 @@ public class UnitTests
                 SaslKerberosServiceName = ""
             };
 
-            await ProduceTestMessage();
+            _input.SecurityProtocol = SecurityProtocols.SaslPlaintext;
 
-            var _input = new Input()
-            {
-                Host = _hostPlaintext,
-                Topic = _topic,
-                SecurityProtocol = SecurityProtocols.SaslPlaintext,
-                MessageCount = 10,
-                Timeout = 10000,
-            };
-
-            var _options = new Options()
-            {
-                Acks = Ack.None,
-                MaxInFlight = 1000000,
-                MessageMaxBytes = 1000000,
-                ConnectionsMaxIdleMs = 10000,
-                AllowAutoCreateTopics = false,
-                ApiVersionFallbackMs = 0,
-                ApiVersionRequest = true,
-                ApiVersionRequestTimeoutMs = 10000,
-                AutoCommitIntervalMs = 5000,
-                AutoOffsetReset = AutoOffsetResets.Earliest,
-                BrokerAddressFamily = BrokerAddressFamilys.Any,
-                EnableAutoCommit = true,
-                EnableAutoOffsetStore = true,
-                CheckCrcs = false,
-                FetchErrorBackoffMs = 500,
-                FetchMaxBytes = 52428800,
-                FetchMinBytes = 1,
-                FetchWaitMaxMs = 500,
-                GroupId = null,
-                GroupInstanceId = null,
-                HeartbeatIntervalMs = 3000,
-                IsolationLevel = IsolationLevels.ReadUncommitted,
-                QueuedMaxMessagesKbytes = 65536,
-                QueuedMinMessages = 1,
-                ReconnectBackoffMaxMs = 10000,
-                ReconnectBackoffMs = 100,
-                SessionTimeoutMs = 10000,
-                MaxPollIntervalMs = 20000,
-            };
-
-            var _socket = new Socket()
-            {
-                SocketConnectionSetupTimeoutMs = 30000,
-                SocketKeepaliveEnable = false,
-                SocketMaxFails = 1,
-                SocketNagleDisable = false,
-                SocketReceiveBufferBytes = 0,
-                SocketTimeoutMs = 10000,
-            };
-
-            var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
+            var result = Kafka.Consume(_input, _options, _socket, sasl, _ssl, default);
             Assert.IsTrue(result.Success);
             Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
             Assert.AreEqual(2, result.Messages.Count);
@@ -454,6 +240,8 @@ public class UnitTests
             Assert.Ignore("Sasl is not supported on Windows.");
         else
         {
+            await ProduceTestMessage();
+
             var sasl = new Sasl
             {
                 UseSasl = true,
@@ -462,63 +250,12 @@ public class UnitTests
                 SaslKerberosServiceName = ""
             };
 
-            await ProduceTestMessage();
-
-            var _input = new Input()
-            {
-                Host = _hostPlaintext,
-                Topic = _topic,
-                SecurityProtocol = SecurityProtocols.SaslSsl,
-                MessageCount = 10,
-                Timeout = 10000,
-            };
-
-            var _options = new Options()
-            {
-                Acks = Ack.None,
-                MaxInFlight = 1000000,
-                MessageMaxBytes = 1000000,
-                ConnectionsMaxIdleMs = 10000,
-                AllowAutoCreateTopics = false,
-                ApiVersionFallbackMs = 0,
-                ApiVersionRequest = true,
-                ApiVersionRequestTimeoutMs = 10000,
-                AutoCommitIntervalMs = 5000,
-                AutoOffsetReset = AutoOffsetResets.Earliest,
-                BrokerAddressFamily = BrokerAddressFamilys.Any,
-                EnableAutoCommit = true,
-                EnableAutoOffsetStore = true,
-                CheckCrcs = false,
-                FetchErrorBackoffMs = 500,
-                FetchMaxBytes = 52428800,
-                FetchMinBytes = 1,
-                FetchWaitMaxMs = 500,
-                GroupId = null,
-                GroupInstanceId = null,
-                HeartbeatIntervalMs = 3000,
-                IsolationLevel = IsolationLevels.ReadUncommitted,
-                QueuedMaxMessagesKbytes = 65536,
-                QueuedMinMessages = 1,
-                ReconnectBackoffMaxMs = 10000,
-                ReconnectBackoffMs = 100,
-                SessionTimeoutMs = 10000,
-                MaxPollIntervalMs = 20000,
-            };
-
-            var _socket = new Socket()
-            {
-                SocketConnectionSetupTimeoutMs = 30000,
-                SocketKeepaliveEnable = false,
-                SocketMaxFails = 1,
-                SocketNagleDisable = false,
-                SocketReceiveBufferBytes = 0,
-                SocketTimeoutMs = 10000,
-            };
+            _input.SecurityProtocol = SecurityProtocols.SaslSsl;
 
             var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
             Assert.IsTrue(result.Success);
-            Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
             Assert.AreEqual(2, result.Messages.Count);
+            Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
         }
     }
 
