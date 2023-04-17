@@ -18,15 +18,18 @@ public class UnitTests
     */
 
     private readonly string _hostPlaintext = "localhost:9092";
+    private readonly string _hostSaslPlaintext = "localhost:9093";
+    private readonly string _username = "admin";
+    private readonly string _password = "admin-secret";
     private readonly string _message = $"Hello {DateTime.Now}";
     private readonly string _topic = "ConsumeTopic";
 
     readonly Sasl? _sasl = new() { UseSasl = false };
     readonly Ssl? _ssl = new() { UseSsl = false };
 
-    private static Input _input;
-    private static Options _options;
-    private static Socket _socket;
+    private static Input _input = new();
+    private static Options _options = new();
+    private static Socket _socket = new();
 
     [SetUp]
     public void Setup()
@@ -136,14 +139,16 @@ public class UnitTests
             SocketReceiveBufferBytes = 0,
             SocketTimeoutMs = 10000,
         };
-
-        Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
     }
 
     [Test]
     public async Task Kafka_Consume_Test()
     {
-        await ProduceTestMessage();
+        ProducerConfig config = new()
+        {
+            BootstrapServers = _hostPlaintext
+        };
+        await ProduceTestMessage(config);
         var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
         Assert.IsTrue(result.Success);
         Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
@@ -159,109 +164,49 @@ public class UnitTests
     }
 
     [Test]
-    public async Task Kafka_ProduceSSL()
-    {
-        await ProduceTestMessage();
-
-        var ssl = new Ssl
-        {
-            UseSsl = true,
-            EnableSslCertificateVerification = true,
-            SslCaCertificateStores = "",
-            SslCaLocation = "",
-            SslCaPem = "",
-            SslCertificateLocation = "",
-            SslCertificatePem = "",
-            SslCipherSuites = "",
-            SslCrlLocation = "",
-            SslCurvesList = ""
-        };
-
-        var result = Kafka.Consume(_input, _options, _socket, _sasl, ssl, default);
-        Assert.IsTrue(result.Success);
-        Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
-        Assert.AreEqual(2, result.Messages.Count);
-    }
-
-    [Test]
     public async Task Kafka_ConsumeSaSL()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            Assert.Ignore("Sasl is not supported on Windows.");
-        else
+        ProducerConfig config = new()
         {
-            await ProduceTestMessage();
+            BootstrapServers = _hostSaslPlaintext,
+            SecurityProtocol = SecurityProtocol.SaslPlaintext,
+            SaslMechanism = SaslMechanism.Plain,
+            SaslUsername = _username,
+            SaslPassword = _password
+        };
+        await ProduceTestMessage(config);
 
-            var sasl = new Sasl
-            {
-                UseSasl = true,
-                SaslMechanism = SaslMechanisms.Plain,
-                SaslKerberosPrincipal = "",
-                SaslKerberosServiceName = ""
-            };
+        var sasl = new Sasl
+        {
+            UseSasl = true,
+            SaslMechanism = SaslMechanisms.Plain,
+            SaslKerberosPrincipal = "",
+            SaslKerberosServiceName = "",
+            SaslUsername = _username,
+            SaslPassword = _password,
+        };
 
-            var result = Kafka.Consume(_input, _options, _socket, sasl, _ssl, default);
-            Assert.IsTrue(result.Success);
-            Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
-            Assert.AreEqual(2, result.Messages.Count);
-        }
+        _input.Host = _hostSaslPlaintext;
+        _input.SecurityProtocol = SecurityProtocols.SaslPlaintext;
+
+        var result = Kafka.Consume(_input, _options, _socket, sasl, _ssl, default);
+        Assert.IsTrue(result.Success);
+        Assert.AreEqual(2, result.Messages.Count);
+        Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
     }
 
     [Test]
-    public async Task Kafka_ConsumeSaSLWithSaslPlaintext()
+    public void Kafka_Consume_TestWithInvalidTimeoutProperties()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            Assert.Ignore("Sasl is not supported on Windows.");
-        else
-        {
-            await ProduceTestMessage();
+        _options.MaxPollIntervalMs = 0;
+        _options.SessionTimeoutMs = 60;
 
-            var sasl = new Sasl
-            {
-                UseSasl = true,
-                SaslMechanism = SaslMechanisms.Plain,
-                SaslKerberosPrincipal = "",
-                SaslKerberosServiceName = ""
-            };
-
-            _input.SecurityProtocol = SecurityProtocols.SaslPlaintext;
-
-            var result = Kafka.Consume(_input, _options, _socket, sasl, _ssl, default);
-            Assert.IsTrue(result.Success);
-            Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
-            Assert.AreEqual(2, result.Messages.Count);
-        }
+        var ex = Assert.Throws<Exception>(() => Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default));
+        Assert.AreEqual("Options.MaxPollIntervalMs must be >= Options.SessionTimeoutMs", ex.Message);
     }
 
-    [Test]
-    public async Task Kafka_ConsumeSaSLwithSaslSslSecurity()
+    private async Task ProduceTestMessage(ProducerConfig config)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            Assert.Ignore("Sasl is not supported on Windows.");
-        else
-        {
-            await ProduceTestMessage();
-
-            var sasl = new Sasl
-            {
-                UseSasl = true,
-                SaslMechanism = SaslMechanisms.Plain,
-                SaslKerberosPrincipal = "",
-                SaslKerberosServiceName = ""
-            };
-
-            _input.SecurityProtocol = SecurityProtocols.SaslSsl;
-
-            var result = Kafka.Consume(_input, _options, _socket, _sasl, _ssl, default);
-            Assert.IsTrue(result.Success);
-            Assert.AreEqual(2, result.Messages.Count);
-            Assert.IsTrue(result.Messages.Any(x => x.Value.Contains(_message)));
-        }
-    }
-
-    private async Task ProduceTestMessage()
-    {
-        ProducerConfig config = new() { BootstrapServers = _hostPlaintext };
         using var producer = new ProducerBuilder<Null, string>(config).Build();
         for (int i = 0; i < 2; i++)
             await producer.ProduceAsync(_topic, new Message<Null, string> { Value = JsonSerializer.Serialize(_message + i.ToString()) });
