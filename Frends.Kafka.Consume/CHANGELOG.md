@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.1] - 2023-04-04
+## [1.0.1] - 2023-04-17
 ### Fixed
 - Changed Task to set ssl.SslCaCertificateStores only if it's set as parameter.
 

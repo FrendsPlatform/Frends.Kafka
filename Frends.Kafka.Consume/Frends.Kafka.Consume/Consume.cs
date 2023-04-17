@@ -1,7 +1,7 @@
 ﻿using Frends.Kafka.Consume.Definitions;
 using System.ComponentModel;
 using System;
-using System.Runtime.InteropServices;
+using System.Diagnostics.CodeAnalysis;
 using Confluent.Kafka;
 using System.Threading;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Frends.Kafka.Consume;
 
 /// <summary>
-/// Kafka Task.
+/// Kafka Task
 /// </summary>
 public class Kafka
 {
@@ -108,8 +108,6 @@ public class Kafka
 
         if (sasl.UseSasl)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                throw new NotImplementedException("Sasl is implemented only only on Linux OS.");
             config.SaslMechanism = GetSaslMechanism(sasl);
             config.SaslUsername = sasl.SaslUsername;
             config.SaslPassword = sasl.SaslPassword;
@@ -120,8 +118,11 @@ public class Kafka
             config.SaslOauthbearerConfig = string.IsNullOrWhiteSpace(sasl.SaslOauthbearerConfig) ? "" : sasl.SaslOauthbearerConfig;
             config.SaslOauthbearerExtensions = string.IsNullOrWhiteSpace(sasl.SaslOauthbearerExtensions) ? "" : sasl.SaslOauthbearerExtensions;
             config.SaslOauthbearerScope = string.IsNullOrWhiteSpace(sasl.SaslOauthbearerScope) ? "" : sasl.SaslOauthbearerScope;
-            config.SaslKerberosKeytab = string.IsNullOrWhiteSpace(sasl.SaslKerberosKeytab) ? "" : sasl.SaslKerberosKeytab;
-            config.SaslKerberosMinTimeBeforeRelogin = sasl.SaslKerberosMinTimeBeforeRelogin;
+            if (!string.IsNullOrEmpty(config.SaslKerberosKeytab))
+            {
+                config.SaslKerberosKeytab = sasl.SaslKerberosKeytab;
+                config.SaslKerberosMinTimeBeforeRelogin = sasl.SaslKerberosMinTimeBeforeRelogin;
+            }
             config.SaslKerberosPrincipal = sasl.SaslKerberosPrincipal;
             config.SaslKerberosServiceName = sasl.SaslKerberosServiceName;
         }
@@ -150,6 +151,8 @@ public class Kafka
 
         return config;
     }
+
+    [ExcludeFromCodeCoverage]
     private static SecurityProtocol GetSecurityProtocol(Input input)
     {
         return input.SecurityProtocol switch
@@ -162,6 +165,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static IsolationLevel GetIsolationLevel(Options options)
     {
         return options.IsolationLevel switch
@@ -172,6 +176,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static BrokerAddressFamily GetBrokerAddressFamily(Options options)
     {
         return options.BrokerAddressFamily switch
@@ -183,6 +188,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static AutoOffsetReset GetAutoOffsetReset(Options options)
     {
         return options.AutoOffsetReset switch
@@ -194,6 +200,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static SslEndpointIdentificationAlgorithm GetSslEndpointIdentificationAlgorithm(Ssl ssl)
     {
         return ssl.SslEndpointIdentificationAlgorithm switch
@@ -204,6 +211,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static Acks GetAcks(Options options)
     {
         return options.Acks switch
@@ -215,6 +223,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static SaslOauthbearerMethod GetSaslOauthbearerMethod(Sasl sasl)
     {
         return sasl.SaslOauthbearerMethod switch
@@ -225,6 +234,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static SaslMechanism GetSaslMechanism(Sasl sasl)
     {
         return sasl.SaslMechanism switch
