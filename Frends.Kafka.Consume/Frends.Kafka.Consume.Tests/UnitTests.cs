@@ -2,7 +2,6 @@ using NUnit.Framework;
 using Frends.Kafka.Consume.Definitions;
 using Confluent.Kafka;
 using System.Text.Json;
-using System.Runtime.InteropServices;
 
 namespace Frends.Kafka.Consume.Tests;
 
@@ -11,7 +10,7 @@ public class UnitTests
 {
     /*
         Docker compose:
-        Run command 'docker-compose up -d' in .\Frends.Kafka.Consume.Tests\Files\ 
+        Run command 'docker-compose up -d' in .\Frends.Kafka.Consume.Tests
         
         Read message(s) from topic:
         docker exec --interactive --tty "container's name" kafka-console-consumer --bootstrap-server localhost:9092 --topic ConsumeTopic --from-beginning
