@@ -1,0 +1,40 @@
+version: '3.7'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper-sasl
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SASL_ENABLED: "false"
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    container_name: "kafka-sasl"
+    ports:
+      - 9092:9092
+      - 9093:9093
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      ZOOKEEPER_SASL_ENABLED: 'false'
+      KAFKA_ADVERTISED_HOST_NAME: kafka-sasl
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092, SASL_PLAINTEXT://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT, SASL_PLAINTEXT:SASL_PLAINTEXT
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+    volumes:
+      - ./kafka-config/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
+      - ./kafka-config/kafka_client.conf:/etc/kafka/kafka_client.conf
+      - ./certs:/etc/kafka/secrets

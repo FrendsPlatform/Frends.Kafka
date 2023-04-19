@@ -1,6 +1,7 @@
 ﻿using Frends.Kafka.Consume.Definitions;
 using System.ComponentModel;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Confluent.Kafka;
 using System.Threading;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Collections.Generic;
 namespace Frends.Kafka.Consume;
 
 /// <summary>
-/// Kafka Task.
+/// Kafka Task
 /// </summary>
 public class Kafka
 {
@@ -57,6 +58,7 @@ public class Kafka
         finally
         {
             consumer.Close();
+            consumer.Dispose();
         }
 
         return new Result(true, result);
@@ -83,8 +85,8 @@ public class Kafka
             FetchMaxBytes = options.FetchMaxBytes,
             FetchMinBytes = options.FetchMinBytes,
             FetchWaitMaxMs = options.FetchWaitMaxMs,
-            GroupId = String.IsNullOrWhiteSpace(options.GroupId) ? "string" : options.GroupId,
-            GroupInstanceId = String.IsNullOrWhiteSpace(options.GroupInstanceId) ? "" : options.GroupInstanceId,
+            GroupId = string.IsNullOrWhiteSpace(options.GroupId) ? "string" : options.GroupId,
+            GroupInstanceId = string.IsNullOrWhiteSpace(options.GroupInstanceId) ? "" : options.GroupInstanceId,
             HeartbeatIntervalMs = options.HeartbeatIntervalMs,
             IsolationLevel = GetIsolationLevel(options),
             MaxPollIntervalMs = options.MaxPollIntervalMs,
@@ -110,14 +112,17 @@ public class Kafka
             config.SaslUsername = sasl.SaslUsername;
             config.SaslPassword = sasl.SaslPassword;
             config.SaslOauthbearerMethod = GetSaslOauthbearerMethod(sasl);
-            config.SaslOauthbearerClientId = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerClientId) ? "" : sasl.SaslOauthbearerClientId;
-            config.SaslOauthbearerClientSecret = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerClientSecret) ? "" : sasl.SaslOauthbearerClientSecret;
-            config.SaslOauthbearerTokenEndpointUrl = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerTokenEndpointUrl) ? "" : sasl.SaslOauthbearerTokenEndpointUrl;
-            config.SaslOauthbearerConfig = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerConfig) ? "" : sasl.SaslOauthbearerConfig;
-            config.SaslOauthbearerExtensions = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerExtensions) ? "" : sasl.SaslOauthbearerExtensions;
-            config.SaslOauthbearerScope = String.IsNullOrWhiteSpace(sasl.SaslOauthbearerScope) ? "" : sasl.SaslOauthbearerScope;
-            config.SaslKerberosKeytab = String.IsNullOrWhiteSpace(sasl.SaslKerberosKeytab) ? "" : sasl.SaslKerberosKeytab;
-            config.SaslKerberosMinTimeBeforeRelogin = sasl.SaslKerberosMinTimeBeforeRelogin;
+            config.SaslOauthbearerClientId = string.IsNullOrWhiteSpace(sasl.SaslOauthbearerClientId) ? "" : sasl.SaslOauthbearerClientId;
+            config.SaslOauthbearerClientSecret = string.IsNullOrWhiteSpace(sasl.SaslOauthbearerClientSecret) ? "" : sasl.SaslOauthbearerClientSecret;
+            config.SaslOauthbearerTokenEndpointUrl = string.IsNullOrWhiteSpace(sasl.SaslOauthbearerTokenEndpointUrl) ? "" : sasl.SaslOauthbearerTokenEndpointUrl;
+            config.SaslOauthbearerConfig = string.IsNullOrWhiteSpace(sasl.SaslOauthbearerConfig) ? "" : sasl.SaslOauthbearerConfig;
+            config.SaslOauthbearerExtensions = string.IsNullOrWhiteSpace(sasl.SaslOauthbearerExtensions) ? "" : sasl.SaslOauthbearerExtensions;
+            config.SaslOauthbearerScope = string.IsNullOrWhiteSpace(sasl.SaslOauthbearerScope) ? "" : sasl.SaslOauthbearerScope;
+            if (!string.IsNullOrEmpty(config.SaslKerberosKeytab))
+            {
+                config.SaslKerberosKeytab = sasl.SaslKerberosKeytab;
+                config.SaslKerberosMinTimeBeforeRelogin = sasl.SaslKerberosMinTimeBeforeRelogin;
+            }
             config.SaslKerberosPrincipal = sasl.SaslKerberosPrincipal;
             config.SaslKerberosServiceName = sasl.SaslKerberosServiceName;
         }
@@ -126,25 +131,28 @@ public class Kafka
         {
             config.SslEndpointIdentificationAlgorithm = GetSslEndpointIdentificationAlgorithm(ssl);
             config.EnableSslCertificateVerification = ssl.EnableSslCertificateVerification;
-            config.SslCertificateLocation = String.IsNullOrWhiteSpace(ssl.SslCertificateLocation) ? "" : ssl.SslCertificateLocation;
-            config.SslCertificatePem = String.IsNullOrWhiteSpace(ssl.SslCertificatePem) ? "" : ssl.SslCertificatePem;
-            config.SslCaCertificateStores = ssl.SslCaCertificateStores;
-            config.SslCaLocation = String.IsNullOrWhiteSpace(ssl.SslCaLocation) ? "" : ssl.SslCaLocation;
-            config.SslCaPem = String.IsNullOrWhiteSpace(ssl.SslCaPem) ? "" : ssl.SslCaPem;
-            config.SslKeyLocation = String.IsNullOrWhiteSpace(ssl.SslKeyLocation) ? "" : ssl.SslKeyLocation;
-            config.SslKeyPassword = String.IsNullOrWhiteSpace(ssl.SslKeyPassword) ? "" : ssl.SslKeyPassword;
-            config.SslKeyPem = String.IsNullOrWhiteSpace(ssl.SslKeyPem) ? "" : ssl.SslKeyPem;
-            config.SslKeystoreLocation = String.IsNullOrWhiteSpace(ssl.SslKeystoreLocation) ? "" : ssl.SslKeystoreLocation;
-            config.SslKeystorePassword = String.IsNullOrWhiteSpace(ssl.SslKeystorePassword) ? "" : ssl.SslKeystorePassword;
-            config.SslEngineLocation = String.IsNullOrWhiteSpace(ssl.SslEngineLocation) ? "" : ssl.SslEngineLocation;
-            config.SslCipherSuites = String.IsNullOrWhiteSpace(ssl.SslCipherSuites) ? "" : ssl.SslCipherSuites;
-            config.SslCrlLocation = String.IsNullOrWhiteSpace(ssl.SslCrlLocation) ? "" : ssl.SslCrlLocation;
-            config.SslCurvesList = String.IsNullOrWhiteSpace(ssl.SslCurvesList) ? "" : ssl.SslCurvesList;
-            config.SslSigalgsList = String.IsNullOrWhiteSpace(ssl.SslSigalgsList) ? "" : ssl.SslSigalgsList;
+            config.SslCertificateLocation = string.IsNullOrWhiteSpace(ssl.SslCertificateLocation) ? "" : ssl.SslCertificateLocation;
+            config.SslCertificatePem = string.IsNullOrWhiteSpace(ssl.SslCertificatePem) ? "" : ssl.SslCertificatePem;
+            if (!string.IsNullOrEmpty(ssl.SslCaCertificateStores))
+                config.SslCaCertificateStores = ssl.SslCaCertificateStores;
+            config.SslCaLocation = string.IsNullOrWhiteSpace(ssl.SslCaLocation) ? "" : ssl.SslCaLocation;
+            config.SslCaPem = string.IsNullOrWhiteSpace(ssl.SslCaPem) ? "" : ssl.SslCaPem;
+            config.SslKeyLocation = string.IsNullOrWhiteSpace(ssl.SslKeyLocation) ? "" : ssl.SslKeyLocation;
+            config.SslKeyPassword = string.IsNullOrWhiteSpace(ssl.SslKeyPassword) ? "" : ssl.SslKeyPassword;
+            config.SslKeyPem = string.IsNullOrWhiteSpace(ssl.SslKeyPem) ? "" : ssl.SslKeyPem;
+            config.SslKeystoreLocation = string.IsNullOrWhiteSpace(ssl.SslKeystoreLocation) ? "" : ssl.SslKeystoreLocation;
+            config.SslKeystorePassword = string.IsNullOrWhiteSpace(ssl.SslKeystorePassword) ? "" : ssl.SslKeystorePassword;
+            config.SslEngineLocation = string.IsNullOrWhiteSpace(ssl.SslEngineLocation) ? "" : ssl.SslEngineLocation;
+            config.SslCipherSuites = string.IsNullOrWhiteSpace(ssl.SslCipherSuites) ? "" : ssl.SslCipherSuites;
+            config.SslCrlLocation = string.IsNullOrWhiteSpace(ssl.SslCrlLocation) ? "" : ssl.SslCrlLocation;
+            config.SslCurvesList = string.IsNullOrWhiteSpace(ssl.SslCurvesList) ? "" : ssl.SslCurvesList;
+            config.SslSigalgsList = string.IsNullOrWhiteSpace(ssl.SslSigalgsList) ? "" : ssl.SslSigalgsList;
         }
 
         return config;
     }
+
+    [ExcludeFromCodeCoverage]
     private static SecurityProtocol GetSecurityProtocol(Input input)
     {
         return input.SecurityProtocol switch
@@ -157,6 +165,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static IsolationLevel GetIsolationLevel(Options options)
     {
         return options.IsolationLevel switch
@@ -167,6 +176,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static BrokerAddressFamily GetBrokerAddressFamily(Options options)
     {
         return options.BrokerAddressFamily switch
@@ -178,6 +188,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static AutoOffsetReset GetAutoOffsetReset(Options options)
     {
         return options.AutoOffsetReset switch
@@ -189,6 +200,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static SslEndpointIdentificationAlgorithm GetSslEndpointIdentificationAlgorithm(Ssl ssl)
     {
         return ssl.SslEndpointIdentificationAlgorithm switch
@@ -199,6 +211,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static Acks GetAcks(Options options)
     {
         return options.Acks switch
@@ -210,6 +223,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static SaslOauthbearerMethod GetSaslOauthbearerMethod(Sasl sasl)
     {
         return sasl.SaslOauthbearerMethod switch
@@ -220,6 +234,7 @@ public class Kafka
         };
     }
 
+    [ExcludeFromCodeCoverage]
     private static SaslMechanism GetSaslMechanism(Sasl sasl)
     {
         return sasl.SaslMechanism switch
