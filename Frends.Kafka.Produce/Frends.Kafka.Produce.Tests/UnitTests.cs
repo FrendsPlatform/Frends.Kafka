@@ -9,7 +9,7 @@ public class UnitTests
 {
     /*
         docker-compose up -d
-        
+         
         Read message(s) from topic:
         docker exec --interactive --tty broker kafka-console-consumer --bootstrap-server localhost:9092 --topic TestTopic --from-beginning
     */
