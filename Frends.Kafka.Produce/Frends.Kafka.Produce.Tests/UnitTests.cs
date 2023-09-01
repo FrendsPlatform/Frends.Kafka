@@ -1,6 +1,6 @@
 using Frends.Kafka.Produce.Definitions;
-using System.Runtime.InteropServices;
 using NUnit.Framework;
+using System.Runtime.InteropServices;
 
 namespace Frends.Kafka.Produce.Tests;
 
@@ -8,10 +8,7 @@ namespace Frends.Kafka.Produce.Tests;
 public class UnitTests
 {
     /*
-        Run command:
-
-        - on linux/git bash: ./Frends.Kafka.Produce.Test/Prebuild/prebuildCommand.sh
-        - on windows: .\Frends.Kafka.Produce.Tests\Prebuild\prebuildCommand.ps1
+        docker-compose up -d
         
         Read message(s) from topic:
         docker exec --interactive --tty broker kafka-console-consumer --bootstrap-server localhost:9092 --topic TestTopic --from-beginning
@@ -21,22 +18,74 @@ public class UnitTests
     private readonly string? _message = $"Hello {DateTime.Now}";
     private readonly string? _topic = "TestTopic";
 
-    readonly Sasl? _sasl = new() { UseSasl = false };
-    readonly Ssl? _ssl = new() { UseSsl = false };
+    private Input _input = new();
+    private Options _options = new();
+    private Sasl _sasl = new() { UseSasl = false };
+    private Ssl _ssl = new() { UseSsl = false };
+    private readonly Socket _socket = new();
 
-    [Test]
-    public async Task Kafka_Produce_Test()
+    [OneTimeSetUp]
+    public void Init()
     {
-        var _input = new Input()
+        _input = new Input()
         {
             Message = _message,
             Host = _hostPlaintext,
-            Topic = _topic
+            Topic = _topic,
+            CompressionType = CompressionTypes.None,
+            Key = null,
+            Partition = -1,
+            SecurityProtocol = SecurityProtocols.Plaintext
         };
 
-        var _options = new Options();
-        var _socket = new Socket();
+        _options = new Options()
+        {
+            MessageTimeoutMs = 300000,
+            Acks = Ack.None,
+            ApiVersionRequest = true,
+            EnableIdempotence = false,
+            LingerMs = 5,
+            MaxInFlight = 1000000,
+            MessageMaxBytes = 1000000,
+            MessageSendMaxRetries = 2147483647,
+            Partitioner = Partitioners.ConsistentRandom,
+            QueueBufferingMaxKbytes = 1048576,
+            QueueBufferingMaxMessages = 100000,
+            TransactionalId = null,
+            TransactionTimeoutMs = 60000
+        };
+    }
 
+    [Test]
+    public async Task Kafka_Produce_Default_Test()
+    {
+        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
+        Assert.IsTrue(result.Success);
+        Assert.IsNotNull(result.Timestamp);
+    }
+
+    [Test]
+    public async Task Kafka_Produce_Empty_Message()
+    {
+        _input.Message = null;
+        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
+        Assert.IsTrue(result.Success);
+        Assert.IsNotNull(result.Timestamp);
+    }
+
+    [Test]
+    public async Task Kafka_Produce_Partition_Test()
+    {
+        _input.Partition = 0;
+        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
+        Assert.IsTrue(result.Success);
+        Assert.IsNotNull(result.Timestamp);
+    }
+
+    [Test]
+    public async Task Kafka_Produce_Partition_Key()
+    {
+        _input.Key = "SomeKey";
         var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.Timestamp);
@@ -45,28 +94,15 @@ public class UnitTests
     [Test]
     public void Kafka_ErrorHandling_Test()
     {
-        var _input = new Input()
-        {
-            Message = _message,
-            Host = _hostPlaintext,
-            Topic = _topic,
-        };
-
-        var _options = new Options()
-        {
-            MessageTimeoutMs = 1
-        };
-
-        var _socket = new Socket();
-
+        _options.MessageTimeoutMs = 1;
         var ex = Assert.ThrowsAsync<Exception>(() => Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default));
         Assert.IsNotNull(ex.Message);
     }
 
     [Test]
-    public async Task Kafka_ProduceSSL()
+    public async Task Kafka_Produce_SSL()
     {
-        var ssl = new Ssl
+        _ssl = new Ssl
         {
             UseSsl = true,
             EnableSslCertificateVerification = true,
@@ -80,17 +116,7 @@ public class UnitTests
             SslCurvesList = ""
         };
 
-        var input = new Input()
-        {
-            Message = _message,
-            Host = _hostPlaintext,
-            Topic = _topic,
-        };
-
-        var options = new Options();
-        var socket = new Socket();
-
-        var result = await Kafka.Produce(input, options, socket, _sasl, ssl, default);
+        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
         Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.Timestamp);
     }
@@ -102,7 +128,7 @@ public class UnitTests
             Assert.Ignore("Sasl is not supported on Windows.");
         else
         {
-            var sasl = new Sasl
+            _sasl = new Sasl
             {
                 UseSasl = true,
                 SaslMechanism = SaslMechanisms.Plain,
@@ -110,17 +136,7 @@ public class UnitTests
                 SaslKerberosServiceName = ""
             };
 
-            var input = new Input()
-            {
-                Message = _message,
-                Host = _hostPlaintext,
-                Topic = _topic,
-            };
-
-            var options = new Options();
-            var socket = new Socket();
-
-            var result = await Kafka.Produce(input, options, socket, sasl, _ssl, default);
+            var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
             Assert.IsTrue(result.Success);
             Assert.IsNotNull(result.Timestamp);
         }
