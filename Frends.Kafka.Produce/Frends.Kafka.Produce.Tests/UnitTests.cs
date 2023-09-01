@@ -24,7 +24,7 @@ public class UnitTests
     private Ssl _ssl = new() { UseSsl = false };
     private readonly Socket _socket = new();
 
-    [OneTimeSetUp]
+    [SetUp]
     public void Init()
     {
         _input = new Input()
@@ -40,11 +40,11 @@ public class UnitTests
 
         _options = new Options()
         {
-            MessageTimeoutMs = 300000,
+            MessageTimeoutMs = 2000,
             Acks = Ack.None,
             ApiVersionRequest = true,
             EnableIdempotence = false,
-            LingerMs = 5,
+            LingerMs = 1000,
             MaxInFlight = 1000000,
             MessageMaxBytes = 1000000,
             MessageSendMaxRetries = 2147483647,
