@@ -14,16 +14,31 @@ public class Input
     public string Host { get; set; }
 
     /// <summary>
+    /// Topic.
+    /// </summary>
+    /// <example>ExampleTopic</example>
+    public string Topic { get; set; }
+
+    /// <summary>
+    /// Message key value.
+    /// Can be empty.
+    /// </summary>
+    /// <example>examplekey</example>
+    public string Key { get; set; }
+
+    /// <summary>
     /// Message.
+    /// Can be empty.
     /// </summary>
     /// <example>Example message.</example>
     public string Message { get; set; }
 
     /// <summary>
-    /// Topic.
+    /// The partition value.
     /// </summary>
-    /// <example>ExampleTopic</example>
-    public string Topic { get; set; }
+    /// <example>0</example>
+    [DefaultValue(0)]
+    public int Partition { get; set; }
 
     /// <summary>
     /// Compression codec to use for compressing message sets.
