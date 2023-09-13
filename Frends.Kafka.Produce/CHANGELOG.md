@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.0] - 2023-09-13
+### Added 
+- Removed Input.Message serialization.
+
 ## [1.1.0] - 2023-09-01
 ### Added 
 - Input.Partition, set the partition.

@@ -3,6 +3,7 @@ using Frends.Kafka.Produce.Definitions;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,7 +41,7 @@ public class Kafka
             Message<string, string> message = new()
             {
                 Key = input.Key ?? null,
-                Value = input.Message
+                Value = JsonSerializer.Serialize(input.Message) // input.Message
             };
 
             var result = await producer.ProduceAsync(topicPartition, message, cancellationToken);
