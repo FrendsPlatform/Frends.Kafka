@@ -1,4 +1,7 @@
 # Changelog
+## [1.2.0] - 2023-10-11
+### Changed 
+- Input.Message will no longer be serialized into JSON text before sending.
 
 ## [1.1.0] - 2023-09-01
 ### Added 
