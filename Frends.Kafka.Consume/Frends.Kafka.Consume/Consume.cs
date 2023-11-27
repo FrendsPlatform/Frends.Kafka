@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using Confluent.Kafka;
 using System.Threading;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Frends.Kafka.Consume;
 
@@ -32,19 +33,33 @@ public class Kafka
         var result = new List<Message>();
         var config = Configurations(input, options, socket, sasl, ssl);
 
-        using var consumer = new ConsumerBuilder<Null, string>(config).Build();
-        consumer.Subscribe(input.Topic);
+        using var consumer = new ConsumerBuilder<byte[], string>(config).Build();
+
+        TopicPartition topicPartition;
+        if (input.Partition >= 0)
+        {
+            topicPartition = new TopicPartition(input.Topic, new Partition(input.Partition));
+        }
+        else
+        {
+            topicPartition = new TopicPartition(input.Topic, new Partition());
+        }
+
+        consumer.Assign(new List<TopicPartition> { topicPartition });
+
+        if (consumer.Assignment.Count == 0)
+            throw new Exception("No Topic is subscribed");
         try
         {
-            while (result.Count < input.MessageCount)
+            while (input.MessageCount == 0 || result.Count < input.MessageCount)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var cr = input.Timeout > 0 ? consumer.Consume(input.Timeout) : consumer.Consume(cancellationToken);
-
                 if (cr != null)
+
                     result.Add(new Message()
                     {
-                        Key = cr.Message.Key?.ToString(),
+                        Key = cr.Message.Key != null ? Encoding.UTF8.GetString(cr.Message.Key) : null,
                         Value = cr.Message.Value,
                     });
                 else
