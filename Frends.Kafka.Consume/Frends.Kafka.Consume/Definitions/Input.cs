@@ -40,4 +40,10 @@ public class Input
     /// <example>60000</example>
     [DefaultValue(0)]
     public int Timeout { get; set; }
+
+    /// <summary>
+    /// Set Kafka partition.
+    /// </summary>
+    /// <example>10</example>
+    public int Partition { get; set; }
 }
