@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.2] - 2023-11-27
+## [1.1.0] - 2023-11-27
 ### Added
 - Added a partition as input parameter to the task.
 
