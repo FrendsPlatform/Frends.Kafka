@@ -20,16 +20,19 @@ public class Result
     /// <example>PossiblyPersisted</example>
     public string Status { get; private set; }
 
+    public string TopicPartitionOffset { get; private set; }
+
     /// <summary>
     /// The Kafka message timestamp .
     /// </summary>
     /// <example>2022-10-19 06:00:00</example>
     public string Timestamp { get; private set; }
 
-    internal Result(bool success, string status, string timestamp)
+    internal Result(bool success, string status, string timestamp, string topicPartitionOffset)
     {
         Success = success;
         Status = status;
         Timestamp = timestamp;
+        TopicPartitionOffset = topicPartitionOffset;
     }
 }

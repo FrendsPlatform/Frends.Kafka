@@ -114,3 +114,37 @@ public enum SslEndpointIdentificationAlgorithms
     Https
 #pragma warning restore CS1591 // self explanatory
 }
+
+/// <summary>
+/// Authentication credentials source.
+/// </summary>
+public enum AuthCredentialsSources
+{
+    /// <summary>
+    /// Credentials are specified via the `schema.registry.basic.auth.user.info` config property in the form username:password. If `schema.registry.basic.auth.user.info` is not set, authentication is disabled.
+    /// </summary>
+    UserInfo,
+    /// <summary>
+    /// Credentials are specified via the `sasl.username` and `sasl.password` configuration properties.
+    /// </summary>
+    SaslInherit
+}
+
+public enum RecordTypes
+{
+    Null,
+    Boolean,
+    Int,
+    Long,
+    Float,
+    Double,
+    Bytes,
+    String,
+    Record,
+    Enumeration,
+    Array,
+    Map,
+    Union,
+    Fixed,
+    Error
+}
