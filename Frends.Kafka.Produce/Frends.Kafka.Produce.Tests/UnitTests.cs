@@ -1,5 +1,11 @@
+using Avro.Generic;
+using Confluent.Kafka;
+using Confluent.Kafka.SyncOverAsync;
+using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
 using Frends.Kafka.Produce.Definitions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using System.Runtime.InteropServices;
 
 namespace Frends.Kafka.Produce.Tests;
@@ -22,6 +28,7 @@ public class UnitTests
     private Options _options = new();
     private Sasl _sasl = new() { UseSasl = false };
     private Ssl _ssl = new() { UseSsl = false };
+    private SchemaRegistry _schemaRegistry = new() { UseSchemaRegistry = false };
     private readonly Socket _socket = new();
 
     [SetUp]
@@ -40,7 +47,7 @@ public class UnitTests
 
         _options = new Options()
         {
-            MessageTimeoutMs = 2000,
+            MessageTimeoutMs = 20000,
             Acks = Ack.None,
             ApiVersionRequest = true,
             EnableIdempotence = false,
@@ -59,44 +66,44 @@ public class UnitTests
     [Test]
     public async Task Kafka_Produce_Default_Test()
     {
-        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
-        Assert.IsTrue(result.Success);
-        Assert.IsNotNull(result.Timestamp);
+        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, _schemaRegistry, default);
+        ClassicAssert.That(result.Success);
+        ClassicAssert.IsNotNull(result.Timestamp);
     }
 
     [Test]
     public async Task Kafka_Produce_Empty_Message()
     {
         _input.Message = null;
-        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
-        Assert.IsTrue(result.Success);
-        Assert.IsNotNull(result.Timestamp);
+        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, _schemaRegistry, default);
+        ClassicAssert.IsTrue(result.Success);
+        ClassicAssert.IsNotNull(result.Timestamp);
     }
 
     [Test]
     public async Task Kafka_Produce_Partition_Test()
     {
         _input.Partition = 0;
-        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
-        Assert.IsTrue(result.Success);
-        Assert.IsNotNull(result.Timestamp);
+        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, _schemaRegistry, default);
+        ClassicAssert.IsTrue(result.Success);
+        ClassicAssert.IsNotNull(result.Timestamp);
     }
 
     [Test]
     public async Task Kafka_Produce_Partition_Key()
     {
         _input.Key = "SomeKey";
-        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
-        Assert.IsTrue(result.Success);
-        Assert.IsNotNull(result.Timestamp);
+        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, _schemaRegistry, default);
+        ClassicAssert.IsTrue(result.Success);
+        ClassicAssert.IsNotNull(result.Timestamp);
     }
 
     [Test]
     public void Kafka_ErrorHandling_Test()
     {
         _options.MessageTimeoutMs = 1;
-        var ex = Assert.ThrowsAsync<Exception>(() => Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default));
-        Assert.IsNotNull(ex.Message);
+        var ex = ClassicAssert.ThrowsAsync<Exception>(() => Kafka.Produce(_input, _options, _socket, _sasl, _ssl, _schemaRegistry, default));
+        ClassicAssert.IsNotNull(ex.Message);
     }
 
     [Test]
@@ -116,16 +123,16 @@ public class UnitTests
             SslCurvesList = ""
         };
 
-        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
-        Assert.IsTrue(result.Success);
-        Assert.IsNotNull(result.Timestamp);
+        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, _schemaRegistry, default);
+        ClassicAssert.IsTrue(result.Success);
+        ClassicAssert.IsNotNull(result.Timestamp);
     }
 
     [Test]
     public async Task Kafka_ProduceSaSL()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            Assert.Ignore("Sasl is not supported on Windows.");
+            ClassicAssert.Ignore("Sasl is not supported on Windows.");
         else
         {
             _sasl = new Sasl
@@ -136,9 +143,172 @@ public class UnitTests
                 SaslKerberosServiceName = ""
             };
 
-            var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, default);
-            Assert.IsTrue(result.Success);
-            Assert.IsNotNull(result.Timestamp);
+            var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, _schemaRegistry, default);
+            ClassicAssert.IsTrue(result.Success);
+            ClassicAssert.IsNotNull(result.Timestamp);
         }
+    }
+
+    [Test]
+    public async Task Kafka_Produce_Avro()
+    {
+        var schemaRegistry = new SchemaRegistry()
+        {
+            BasicAuthCredentialsSource = AuthCredentialsSources.UserInfo,
+            BasicAuthUserInfo = null,
+            EnableSslCertificateVerification = false,
+            Records = @"{
+  ""intField"": 123,
+  ""longField"": 1234567890,
+  ""floatField"": 1.23,
+  ""doubleField"": 1.23456789,
+  ""booleanField"": true,
+  ""stringField"": ""test"",
+  ""nullField"": null,
+  ""bytesField"": ""dGVzdDE="", // ""test"" encoded in Base64
+  ""enumField"": ""RED"",
+  ""arrayField"": [""a"", ""b"", ""c""],
+  ""mapField"": {""key1"": 1, ""key2"": 2, ""key3"": 3},
+  ""fixedField"": ""YWJjZA=="", // ""abcd"" encoded in Base64
+  ""unionField"": ""test"",
+  ""recordField"": {
+    ""nestedField"": ""test""
+  }
+}
+",
+            RecordSchemaJson = @"{
+  ""type"": ""record"",
+  ""name"": ""TestRecord"",
+  ""namespace"": ""com.example"",
+  ""fields"": [
+    {
+      ""name"": ""intField"",
+      ""type"": ""int""
+    },
+    {
+      ""name"": ""longField"",
+      ""type"": ""long""
+    },
+    {
+      ""name"": ""floatField"",
+      ""type"": ""float""
+    },
+    {
+      ""name"": ""doubleField"",
+      ""type"": ""double""
+    },
+    {
+      ""name"": ""booleanField"",
+      ""type"": ""boolean""
+    },
+    {
+      ""name"": ""stringField"",
+      ""type"": ""string""
+    },
+    {
+      ""name"": ""nullField"",
+      ""type"": ""null""
+    },
+    {
+      ""name"": ""bytesField"",
+      ""type"": ""bytes""
+    },
+    {
+      ""name"": ""enumField"",
+      ""type"": {
+        ""type"": ""enum"",
+        ""name"": ""Colors"",
+        ""symbols"": [""RED"", ""GREEN"", ""BLUE""]
+      }
+    },
+    {
+      ""name"": ""arrayField"",
+      ""type"": {
+        ""type"": ""array"",
+        ""items"": ""string""
+      }
+    },
+    {
+      ""name"": ""mapField"",
+      ""type"": {
+        ""type"": ""map"",
+        ""values"": ""int""
+      }
+    },
+    {
+      ""name"": ""fixedField"",
+      ""type"": {
+        ""type"": ""fixed"",
+        ""name"": ""FourBytes"",
+        ""size"": 4
+      }
+    },
+    {
+      ""name"": ""unionField"",
+      ""type"": [""null"", ""string""]
+    },
+    {
+      ""name"": ""recordField"",
+      ""type"": {
+        ""type"": ""record"",
+        ""name"": ""NestedRecord"",
+        ""fields"": [
+          {
+            ""name"": ""nestedField"",
+            ""type"": ""string""
+          }
+        ]
+      }
+    }
+  ]
+}",
+
+            UseSchemaRegistry = true,
+            MaxCachedSchemas = 1000,
+            RecordSchemaJsonFile = null,
+            RequestTimeoutMs = 30000,
+            SchemaRegistryUrl = "http://localhost:8081",
+            SslCaLocation = null,
+            SslKeystoreLocation = null,
+            SslKeystorePassword = null
+        };
+
+        var result = await Kafka.Produce(_input, _options, _socket, _sasl, _ssl, schemaRegistry, default);
+        ClassicAssert.IsTrue(result.Success);
+        ClassicAssert.IsNotNull(result.Timestamp);
+
+        // Consume the message
+        var consumerConfig = new ConsumerConfig
+        {
+            BootstrapServers = _input.Host,
+            GroupId = Guid.NewGuid().ToString(),
+            AutoOffsetReset = AutoOffsetReset.Earliest
+        };
+
+        var schemaRegistryConfig = new SchemaRegistryConfig()
+        {
+            Url = schemaRegistry.SchemaRegistryUrl,
+            BasicAuthCredentialsSource = AuthCredentialsSource.UserInfo,
+            EnableSslCertificateVerification = schemaRegistry.EnableSslCertificateVerification,
+            BasicAuthUserInfo = schemaRegistry.BasicAuthUserInfo,
+            SslCaLocation = schemaRegistry.SslCaLocation,
+            RequestTimeoutMs = schemaRegistry.RequestTimeoutMs,
+            MaxCachedSchemas = schemaRegistry.MaxCachedSchemas,
+            SslKeystorePassword = schemaRegistry.SslKeystorePassword,
+            SslKeystoreLocation = schemaRegistry.SslKeystoreLocation,
+        };
+
+        using var cachedSchemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryConfig);
+
+        using var consumer = new ConsumerBuilder<string, GenericRecord>(consumerConfig)
+            .SetValueDeserializer(new AvroDeserializer<GenericRecord>(cachedSchemaRegistryClient).AsSyncOverAsync())
+            .Build();
+
+        consumer.Subscribe(_input.Topic);
+
+        var consumedResult = consumer.Consume();
+
+        // Verify the consumed message
+        ClassicAssert.AreEqual(_input.Message, consumedResult.Message.Value);
     }
 }

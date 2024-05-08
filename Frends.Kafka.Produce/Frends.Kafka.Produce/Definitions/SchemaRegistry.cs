@@ -80,12 +80,10 @@ public class SchemaRegistry
     public string SslKeystorePassword { get; set; }
 
     /// <summary>
-    /// GenericRecord record(s) in name-value pair(s).
+    /// Use either RecordSchemaJson or RecordSchemaJsonFile
     /// </summary>
-    /// <example>
-    /// {
-    ///     { "name", text }
-    /// }
-    /// </example>
-    public List<Record> Records { get; set; }
+    public string RecordSchemaJson { get; set; }
+    public string RecordSchemaJsonFile { get; set; }
+
+    public string Records { get; set; }
 }

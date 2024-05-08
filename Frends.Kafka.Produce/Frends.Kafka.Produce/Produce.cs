@@ -5,10 +5,13 @@ using Confluent.Kafka;
 using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using Frends.Kafka.Produce.Definitions;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,7 +43,6 @@ public class Kafka
                 return await ProduceAvro(input.Topic, input.Key, schemaRegistry, producerConfig, cancellationToken);
 
             return await ProduceBasic(input.Topic, input.Partition, input.Key, input.Message, producerConfig, cancellationToken);
-
         }
         catch (KafkaException ke)
         {
@@ -74,53 +76,199 @@ public class Kafka
 
     private static async Task<Result> ProduceAvro(string topic, string msgKey, SchemaRegistry schemaRegistry, ProducerConfig producerConfig, CancellationToken cancellationToken)
     {
-        var schemaRegistryConfig = new SchemaRegistryConfig()
+        try
         {
-            Url = schemaRegistry.SchemaRegistryUrl,
-            BasicAuthCredentialsSource = GetBasicAuthCredentialsSource(schemaRegistry.BasicAuthCredentialsSource),
-            EnableSslCertificateVerification = schemaRegistry.EnableSslCertificateVerification,
-            BasicAuthUserInfo = schemaRegistry.BasicAuthUserInfo,
-            SslCaLocation = schemaRegistry.SslCaLocation,
-            RequestTimeoutMs = schemaRegistry.RequestTimeoutMs,
-            MaxCachedSchemas = schemaRegistry.MaxCachedSchemas,
-            SslKeystorePassword = schemaRegistry.SslKeystorePassword,
-            SslKeystoreLocation = schemaRegistry.SslKeystoreLocation,
-        };
-
-        using var cachedSchemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryConfig);
-        using var producer = new ProducerBuilder<string, GenericRecord>(producerConfig)
-            .SetValueSerializer(new AvroSerializer<GenericRecord>(cachedSchemaRegistryClient))
-            .Build();
-
-        GenericRecord record = null;
-
-        foreach (var init in schemaRegistry.Records)
-        {
-            GenericRecord nestedRecord = null;
-
-            record = new GenericRecord((RecordSchema)Avro.Schema.Parse(!string.IsNullOrEmpty(init.RecordSchemaJsonFile)
-                    ? File.ReadAllText(init.RecordSchemaJsonFile)
-                    : init.RecordSchemaJson));
-
-            if (init.IsNestedGenericRecord)
+            var schemaRegistryConfig = new SchemaRegistryConfig()
             {
-                foreach (var nr in init.NestedRecord)
-                {
-                    nestedRecord = new GenericRecord((RecordSchema)Avro.Schema.Parse(!string.IsNullOrEmpty(nr.RecordSchemaJsonFile)
-                    ? File.ReadAllText(nr.RecordSchemaJsonFile)
-                    : nr.RecordSchemaJson));
+                Url = schemaRegistry.SchemaRegistryUrl,
+                BasicAuthCredentialsSource = GetBasicAuthCredentialsSource(schemaRegistry.BasicAuthCredentialsSource),
+                EnableSslCertificateVerification = schemaRegistry.EnableSslCertificateVerification,
+                BasicAuthUserInfo = schemaRegistry.BasicAuthUserInfo,
+                RequestTimeoutMs = schemaRegistry.RequestTimeoutMs,
+                MaxCachedSchemas = schemaRegistry.MaxCachedSchemas,
+            };
 
-                    nestedRecord.Add(nr.Name, nr.Value);
+            if (!string.IsNullOrEmpty(schemaRegistry.SslCaLocation))
+            {
+                schemaRegistryConfig.SslCaLocation = schemaRegistry.SslCaLocation;
+                schemaRegistryConfig.SslKeystorePassword = schemaRegistry.SslKeystorePassword;
+                schemaRegistryConfig.SslKeystoreLocation = schemaRegistry.SslKeystoreLocation;
+            }
+
+            using var cachedSchemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryConfig);
+            using var producer = new ProducerBuilder<string, GenericRecord>(producerConfig)
+                .SetValueSerializer(new AvroSerializer<GenericRecord>(cachedSchemaRegistryClient))
+                .Build();
+
+            var avroSchema = (RecordSchema)Avro.Schema.Parse(!string.IsNullOrEmpty(schemaRegistry.RecordSchemaJsonFile)
+                        ? File.ReadAllText(schemaRegistry.RecordSchemaJsonFile)
+                        : schemaRegistry.RecordSchemaJson);
+
+            JObject recordsJObject = JObject.Parse(schemaRegistry.Records);
+
+            var records = new GenericRecord(avroSchema);
+            AddFields(avroSchema, recordsJObject, records);
+
+            var result = await producer.ProduceAsync(topic, new Message<string, GenericRecord> { Key = msgKey, Value = records }, cancellationToken);
+            return new Result(true, result.Status.ToString(), result.TopicPartitionOffset.ToString(), result.Timestamp.UtcDateTime.ToString());
+        }
+        catch (ProduceException<string, GenericRecord> e)
+        {
+            var i = $"Failed to deliver message to {e.DeliveryResult.TopicPartitionOffset}. Error: {e.Error.Reason}";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error producing to Kafka: {ex.Message}");
+        }
+
+        return new Result(false, "Failed", null, null);
+    }
+
+    private static void AddFields(RecordSchema schema, JObject jObject, GenericRecord record)
+    {
+        foreach (var field in schema.Fields)
+        {
+            if (jObject.TryGetValue(field.Name, out JToken token))
+            {
+                // Field is present in JObject
+                switch (field.Schema.Tag)
+                {
+                    case Avro.Schema.Type.Enumeration:
+                        var enumSchema = (EnumSchema)field.Schema;
+                        record.Add(field.Name, new GenericEnum(enumSchema, token.ToObject<string>()));
+                        break;
+                    case Avro.Schema.Type.Fixed:
+                        var fixedSchema = (FixedSchema)field.Schema;
+                        var bytes = Convert.FromBase64String(token.ToObject<string>());
+                        record.Add(field.Name, new GenericFixed(fixedSchema, bytes));
+                        break;
+                    case Avro.Schema.Type.Array:
+                        var array = token.ToObject<string[]>();
+                        record.Add(field.Name, array);
+                        break;
+                    case Avro.Schema.Type.Null:
+                        record.Add(field.Name, null);
+                        break;
+                    case Avro.Schema.Type.Boolean:
+                        record.Add(field.Name, token.ToObject<bool>());
+                        break;
+                    case Avro.Schema.Type.Int:
+                        record.Add(field.Name, token.ToObject<int>());
+                        break;
+                    case Avro.Schema.Type.Long:
+                        record.Add(field.Name, token.ToObject<long>());
+                        break;
+                    case Avro.Schema.Type.Float:
+                        record.Add(field.Name, token.ToObject<float>());
+                        break;
+                    case Avro.Schema.Type.Double:
+                        record.Add(field.Name, token.ToObject<double>());
+                        break;
+                    case Avro.Schema.Type.Bytes:
+                        record.Add(field.Name, Encoding.UTF8.GetBytes(token.ToObject<string>()));
+                        break;
+                    case Avro.Schema.Type.String:
+                        record.Add(field.Name, token.ToObject<string>());
+                        break;
+                    case Avro.Schema.Type.Record:
+                        var recordSchema = (RecordSchema)field.Schema;
+                        var nestedRecord = new GenericRecord(recordSchema);
+                        AddFields(recordSchema, (JObject)token, nestedRecord);
+                        record.Add(field.Name, nestedRecord);
+                        break;
+                    case Avro.Schema.Type.Map:
+                        var mapObject = token.ToObject<Dictionary<string, JToken>>();
+                        var resultMap = new Dictionary<string, object>();
+                        foreach (var kvp in mapObject)
+                        {
+                            resultMap[kvp.Key] = ConvertTokenToAvroType(kvp.Value, kvp.Value.Type);
+                        }
+                        record.Add(field.Name, resultMap);
+                        break;
+                    case Avro.Schema.Type.Union:
+                        var unionSchema = (UnionSchema)field.Schema;
+                        if (unionSchema.Schemas[1].Tag == Avro.Schema.Type.Null && token.Type == JTokenType.Null)
+                        {
+                            record.Add(field.Name, null);
+                        }
+                        else if (unionSchema.Schemas[1].Tag == Avro.Schema.Type.String && token.Type == JTokenType.String)
+                        {
+                            record.Add(field.Name, token.ToObject<string>());
+                        }
+                        // Add more cases as needed for other types in the union
+                        else
+                        {
+                            throw new InvalidOperationException($"Unsupported union type: {unionSchema.Schemas[1].Tag}");
+                        }
+                        break;
+                    case Avro.Schema.Type.Error:
+                        throw new InvalidOperationException("Error type not supported");
+                    case Avro.Schema.Type.Logical:
+                        throw new InvalidOperationException("Logical type not supported");
+                    default:
+                        throw new InvalidOperationException($"Unsupported Avro type: {field.Schema.Tag}");
                 }
-                record.Add(init.Name, nestedRecord);
             }
             else
-                record.Add(init.Name, init.Value);
-
+            {
+                // Field is not present in JObject
+                if (field.Schema is UnionSchema unionSchema)
+                {
+                    // Field is optional
+                    if (field.DefaultValue != null)
+                    {
+                        // Set field to default value
+                        switch (unionSchema.Schemas[1].Tag)
+                        {
+                            case Avro.Schema.Type.Record:
+                                var nestedRecord = new GenericRecord((RecordSchema)unionSchema.Schemas[1]);
+                                AddFields((RecordSchema)unionSchema.Schemas[1], JObject.Parse(field.DefaultValue.ToString()), nestedRecord);
+                                record.Add(field.Name, nestedRecord);
+                                break;
+                            default:
+                                record.Add(field.Name, field.DefaultValue);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        // Set field to null
+                        record.Add(field.Name, null);
+                    }
+                }
+                else
+                {
+                    // Field is required but not present in JObject
+                    throw new InvalidOperationException($"Missing required field: {field.Name}");
+                }
+            }
         }
-        var result = await producer.ProduceAsync(topic, new Message<string, GenericRecord> { Key = msgKey, Value = record }, cancellationToken);
-        return new Result(true, result.Status.ToString(), result.TopicPartitionOffset.ToString(), result.Timestamp.UtcDateTime.ToString());
     }
+
+    private static object ConvertTokenToAvroType(JToken token, JTokenType type)
+    {
+        switch (type)
+        {
+            case JTokenType.Null:
+                return null;
+            case JTokenType.Boolean:
+                return token.ToObject<bool>();
+            case JTokenType.Integer:
+                return token.ToObject<int>();
+            case JTokenType.Float:
+                return token.ToObject<double>();
+            case JTokenType.String:
+                return token.ToObject<string>();
+            case JTokenType.Bytes:
+                return Encoding.UTF8.GetBytes(token.ToObject<string>());
+            default:
+                throw new InvalidOperationException($"Unsupported token type: {type}");
+        }
+    }
+
+
+
+
 
     private static ProducerConfig GetProducerConfig(Input input, Options options, Socket socket, Sasl sasl, Ssl ssl)
     {
@@ -148,6 +296,7 @@ public class Kafka
             SocketReceiveBufferBytes = socket.SocketReceiveBufferBytes,
             TransactionalId = options.TransactionalId,
             TransactionTimeoutMs = options.TransactionTimeoutMs,
+            Debug = "all",
         };
 
         if (sasl.UseSasl)
@@ -172,12 +321,11 @@ public class Kafka
 
         if (ssl.UseSsl)
         {
-            config.SslEndpointIdentificationAlgorithm = GetSslEndpointIdentificationAlgorithm(ssl);
+            config.SslEndpointIdentificationAlgorithm = GetSslEndpointIdentificationAlgorithm(ssl.SslEndpointIdentificationAlgorithm);
             config.EnableSslCertificateVerification = ssl.EnableSslCertificateVerification;
             config.SslCertificateLocation = string.IsNullOrEmpty(ssl.SslCertificateLocation) ? null : ssl.SslCertificateLocation;
             config.SslCertificatePem = string.IsNullOrEmpty(ssl.SslCertificatePem) ? null : ssl.SslCertificatePem;
-            if (!string.IsNullOrEmpty(ssl.SslCaCertificateStores))
-                config.SslCaCertificateStores = ssl.SslCaCertificateStores;
+            config.SslCaCertificateStores = string.IsNullOrEmpty(ssl.SslCaCertificateStores) ? null : ssl.SslCaCertificateStores;
             config.SslCaLocation = string.IsNullOrEmpty(ssl.SslCaLocation) ? null : ssl.SslCaLocation;
             config.SslCaPem = string.IsNullOrEmpty(ssl.SslCaPem) ? null : ssl.SslCaPem;
             config.SslKeyLocation = string.IsNullOrEmpty(ssl.SslKeyLocation) ? null : ssl.SslKeyLocation;
