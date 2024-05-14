@@ -18,9 +18,9 @@ public class Sasl
     /// <summary>
     /// SASL mechanism to use for authentication.
     /// </summary>
-    /// <example>SaslMechanisms.ScramSha256</example>
+    /// <example>SaslMechanisms.Plain</example>
     [UIHint(nameof(UseSasl), "", true)]
-    [DefaultValue(SaslMechanisms.ScramSha256)]
+    [DefaultValue(SaslMechanisms.Plain)]
     public SaslMechanisms SaslMechanism { get; set; }
 
     /// <summary>
@@ -28,7 +28,7 @@ public class Sasl
     /// </summary>
     /// <example>ExampleUser</example>
     [UIHint(nameof(UseSasl), "", true)]
-    public string SaslUsername { get; set; } = "";
+    public string SaslUsername { get; set; }
 
     /// <summary>
     /// SASL password for use with the PLAIN, ScramSha256 or ScramSha512 mechanism.
@@ -36,7 +36,7 @@ public class Sasl
     /// <example>ExamplePassword</example>
     [UIHint(nameof(UseSasl), "", true)]
     [PasswordPropertyText]
-    public string SaslPassword { get; set; } = "";
+    public string SaslPassword { get; set; }
 
     /// <summary>
     /// Set to "default" or "oidc" to control which login method to be used. 
@@ -56,7 +56,7 @@ public class Sasl
     /// </summary>
     /// <example>ExampleClient</example>
     [UIHint(nameof(SaslOauthbearerMethod), "", SaslOauthbearerMethods.Oidc)]
-    public string SaslOauthbearerClientId { get; set; } = "";
+    public string SaslOauthbearerClientId { get; set; }
 
     /// <summary>
     /// Client secret only known to the application and the authorization server. 
@@ -64,14 +64,14 @@ public class Sasl
     /// <example>ExampleSecret</example>
     [PasswordPropertyText]
     [UIHint(nameof(SaslOauthbearerMethod), "", SaslOauthbearerMethods.Oidc)]
-    public string SaslOauthbearerClientSecret { get; set; } = "";
+    public string SaslOauthbearerClientSecret { get; set; }
 
     /// <summary>
     /// OAuth/OIDC issuer token endpoint HTTP(S) URI used to retrieve token.
     /// </summary>
     /// <example>ExampleURL</example>
     [UIHint(nameof(SaslOauthbearerMethod), "", SaslOauthbearerMethods.Oidc)]
-    public string SaslOauthbearerTokenEndpointUrl { get; set; } = "";
+    public string SaslOauthbearerTokenEndpointUrl { get; set; }
 
     /// <summary>
     /// Allow additional information to be provided to the broker. 
@@ -79,54 +79,54 @@ public class Sasl
     /// </summary>
     /// <example>supportFeatureX=true,organizationId=sales-emea</example>
     [UIHint(nameof(SaslOauthbearerMethod), "", SaslOauthbearerMethods.Oidc)]
-    public string SaslOauthbearerExtensions { get; set; } = "";
+    public string SaslOauthbearerExtensions { get; set; }
 
     /// <summary>
     /// Client use this to specify the scope of the access request to the broker.
     /// </summary>
     /// <example>ExampleScope</example>
     [UIHint(nameof(SaslOauthbearerMethod), "", SaslOauthbearerMethods.Oidc)]
-    public string SaslOauthbearerScope { get; set; } = "";
+    public string SaslOauthbearerScope { get; set; }
 
     /// <summary>
     /// SASL/OAUTHBEARER configuration.
     /// </summary>
     /// <example>principal=admin extension_traceId=123</example>
     [UIHint(nameof(UseSasl), "", true)]
-    public string SaslOauthbearerConfig { get; set; } = "";
+    public string SaslOauthbearerConfig { get; set; }
 
     /// <summary>
     /// Path to Kerberos keytab file.
+    /// Not supported on Windows.
     /// </summary>
     /// <example>c:\temp</example>
     [UIHint(nameof(UseSasl), "", true)]
-    public string SaslKerberosKeytab { get; set; } = "";
+    public string SaslKerberosKeytab { get; set; }
 
     /// <summary>
     /// Minimum time in milliseconds between key refresh attempts. 
     /// Disable automatic key refresh by setting this property to 0.
+    /// Not supported on Windows.
     /// </summary>
     /// <example>60000</example>
     [UIHint(nameof(UseSasl), "", true)]
-    [DefaultValue(60000)]
     public int SaslKerberosMinTimeBeforeRelogin { get; set; }
 
     /// <summary>
-    /// This client's Kerberos principal name. 
-    /// (Not supported on Windows, will use the logon user's principal).
+    /// This client's Kerberos principal name.
+    /// Not supported on Windows.
     /// </summary>
     /// <example>kafkaclient</example>
     [UIHint(nameof(UseSasl), "", true)]
     [DisplayFormat(DataFormatString = "Text")]
-    [DefaultValue("kafkaclient")]
     public string SaslKerberosPrincipal { get; set; }
 
     /// <summary>
     /// Kerberos principal name that Kafka runs as, not including /hostname@REALM
+    /// Not supported on Windows.
     /// </summary>
     /// <example>kafka</example>
     [UIHint(nameof(UseSasl), "", true)]
     [DisplayFormat(DataFormatString = "Text")]
-    [DefaultValue("kafka")]
     public string SaslKerberosServiceName { get; set; }
 }

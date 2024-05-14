@@ -50,7 +50,7 @@ public class Options
     /// </summary>
     /// <example>1000000</example>
     [DefaultValue(1000000)]
-    public int MaxInFlight { get; set; } = 1000000;
+    public int MaxInFlight { get; set; }
 
     /// <summary>
     /// Local message timeout. This value is only enforced locally and limits the time a produced message waits for successful delivery. A time of 0 is infinite. 
@@ -68,7 +68,7 @@ public class Options
     /// </summary>
     /// <example>1000000</example>
     [DefaultValue(1000000)]
-    public int MessageMaxBytes { get; set; } = 1000000;
+    public int MessageMaxBytes { get; set; }
 
     /// <summary>
     /// How many times to retry sending a failing Message. 
@@ -91,14 +91,14 @@ public class Options
     /// </summary>
     /// <example>1048576</example>
     [DefaultValue(1048576)]
-    public int QueueBufferingMaxKbytes { get; set; } = 1048576;
+    public int QueueBufferingMaxKbytes { get; set; }
 
     /// <summary>
     /// Maximum number of messages allowed on the producer queue. This queue is shared by all topics and partitions.
     /// </summary>
     /// <example>100000</example>
     [DefaultValue(100000)]
-    public int QueueBufferingMaxMessages { get; set; } = 100000;
+    public int QueueBufferingMaxMessages { get; set; }
 
     /// <summary>
     /// Enables the transactional producer. 
@@ -117,5 +117,12 @@ public class Options
     /// </summary>
     /// <example>60000</example>
     [DefaultValue(60000)]
-    public int TransactionTimeoutMs { get; set; } = 60000;
+    public int TransactionTimeoutMs { get; set; }
+
+    /// <summary>
+    /// A comma-separated list of debug contexts to enable. 
+    /// Detailed Producer debugging: broker,topic,msg.
+    /// </summary>
+    /// <example>broker</example>
+    public string Debug { get; set; }
 }

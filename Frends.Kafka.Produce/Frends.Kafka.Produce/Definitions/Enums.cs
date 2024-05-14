@@ -129,22 +129,3 @@ public enum AuthCredentialsSources
     /// </summary>
     SaslInherit
 }
-
-public enum RecordTypes
-{
-    Null,
-    Boolean,
-    Int,
-    Long,
-    Float,
-    Double,
-    Bytes,
-    String,
-    Record,
-    Enumeration,
-    Array,
-    Map,
-    Union,
-    Fixed,
-    Error
-}
