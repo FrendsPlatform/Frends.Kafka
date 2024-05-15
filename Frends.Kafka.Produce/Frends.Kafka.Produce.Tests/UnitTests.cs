@@ -247,7 +247,7 @@ public class UnitTests
     [TearDown]
     public void Cleanup()
     {
-        // For manual cleaning up. Run until ConsumeBasic() returns nothing for ~10 seconds.
+        //For manual cleaning up. Run until ConsumeBasic() returns nothing for ~10 seconds.
         //while (true)
         //    ConsumeBasic();
     }

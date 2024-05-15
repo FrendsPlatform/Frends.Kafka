@@ -42,8 +42,8 @@ public class Kafka
             var producerConfig = GetProducerConfig(input, options, socket, sasl, ssl);
             if (schemaRegistry.UseSchemaRegistry)
                 return await ProduceAvro(input.Topic, input.Key, input.Partition, schemaRegistry, producerConfig, cancellationToken);
-
-            return await ProduceBasic(input.Topic, input.Partition, input.Key, input.Message, producerConfig, cancellationToken);
+            else
+                return await ProduceBasic(input.Topic, input.Partition, input.Key, input.Message, producerConfig, cancellationToken);
         }
         catch (Exception)
         {
