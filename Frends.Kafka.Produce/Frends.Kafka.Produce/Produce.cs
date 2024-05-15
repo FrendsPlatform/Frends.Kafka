@@ -8,9 +8,9 @@ using Frends.Kafka.Produce.Definitions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -42,7 +42,7 @@ public class Kafka
         {
             var producerConfig = GetProducerConfig(input, options, socket, sasl, ssl);
             if (schemaRegistry.UseSchemaRegistry)
-                return await ProduceAvro(input.Topic, input.Key, schemaRegistry, producerConfig, cancellationToken);
+                return await ProduceAvro(input.Topic, input.Key, input.Partition, schemaRegistry, producerConfig, cancellationToken);
 
             return await ProduceBasic(input.Topic, input.Partition, input.Key, input.Message, producerConfig, cancellationToken);
         }
@@ -56,11 +56,9 @@ public class Kafka
     {
         using var producer = new ProducerBuilder<string, string>(producerConfig).Build();
 
-        TopicPartition topicPartition;
+        TopicPartition topicPartition = null;
         if (partition >= 0)
             topicPartition = new TopicPartition(topic, new Partition(partition));
-        else
-            topicPartition = new TopicPartition(topic, new Partition());
 
         Message<string, string> message = new()
         {
@@ -68,11 +66,13 @@ public class Kafka
             Value = msg
         };
 
-        var result = await producer.ProduceAsync(topicPartition, message, cancellationToken);
-        return new Result(true, result);
+        if (topicPartition != null)
+            return new Result(true, await producer.ProduceAsync(topicPartition, message, cancellationToken));
+        else
+            return new Result(true, await producer.ProduceAsync(topic, message, cancellationToken));
     }
 
-    private static async Task<Result> ProduceAvro(string topic, string msgKey, SchemaRegistry schemaRegistry, ProducerConfig producerConfig, CancellationToken cancellationToken)
+    private static async Task<Result> ProduceAvro(string topic, string msgKey, int partition, SchemaRegistry schemaRegistry, ProducerConfig producerConfig, CancellationToken cancellationToken)
     {
         var schemaRegistryConfig = new SchemaRegistryConfig()
         {
@@ -91,6 +91,10 @@ public class Kafka
             schemaRegistryConfig.SslKeystoreLocation = schemaRegistry.SslKeystoreLocation;
         }
 
+        TopicPartition topicPartition = null;
+        if (partition >= 0)
+            topicPartition = new TopicPartition(topic, new Partition(partition));
+
         using var cachedSchemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryConfig);
         using var producer = new ProducerBuilder<string, GenericRecord>(producerConfig)
             .SetValueSerializer(new AvroSerializer<GenericRecord>(cachedSchemaRegistryClient))
@@ -102,9 +106,10 @@ public class Kafka
         var records = new GenericRecord(avroSchema);
         AddFields(avroSchema, recordsJObject, records);
 
-        var result = await producer.ProduceAsync(topic, new Message<string, GenericRecord> { Key = msgKey, Value = records }, cancellationToken);
-
-        return new Result(true, result);
+        if (topicPartition != null)
+            return new Result(true, await producer.ProduceAsync(topicPartition, new Message<string, GenericRecord> { Key = msgKey, Value = records }, cancellationToken));
+        else
+            return new Result(true, await producer.ProduceAsync(topic, new Message<string, GenericRecord> { Key = msgKey, Value = records }, cancellationToken));
     }
 
     private static void AddFields(RecordSchema schema, JObject jObject, GenericRecord record)

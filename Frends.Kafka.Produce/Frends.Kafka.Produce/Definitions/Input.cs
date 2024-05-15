@@ -35,6 +35,7 @@ public class Input
 
     /// <summary>
     /// The partition value.
+    /// If set to -1. The partition the message is sent to is determined by the partitioner defined using the Options.Partitioner configuration property.
     /// </summary>
     /// <example>0</example>
     [DefaultValue(0)]
