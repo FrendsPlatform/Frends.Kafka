@@ -75,19 +75,19 @@ public class Kafka
     {
         var schemaRegistryConfig = new SchemaRegistryConfig()
         {
-            Url = schemaRegistry.SchemaRegistryUrl,
+            Url = AssignIfNotNullOrEmpty(schemaRegistry.SchemaRegistryUrl, string.Empty),
             BasicAuthCredentialsSource = GetBasicAuthCredentialsSource(schemaRegistry.BasicAuthCredentialsSource),
             EnableSslCertificateVerification = schemaRegistry.EnableSslCertificateVerification,
-            BasicAuthUserInfo = schemaRegistry.BasicAuthUserInfo,
+            BasicAuthUserInfo = AssignIfNotNullOrEmpty(schemaRegistry.BasicAuthUserInfo, string.Empty),
             RequestTimeoutMs = schemaRegistry.RequestTimeoutMs,
             MaxCachedSchemas = schemaRegistry.MaxCachedSchemas,
         };
 
         if (!string.IsNullOrEmpty(schemaRegistry.SslCaLocation))
         {
-            schemaRegistryConfig.SslCaLocation = schemaRegistry.SslCaLocation;
-            schemaRegistryConfig.SslKeystorePassword = schemaRegistry.SslKeystorePassword;
-            schemaRegistryConfig.SslKeystoreLocation = schemaRegistry.SslKeystoreLocation;
+            schemaRegistryConfig.SslCaLocation = AssignIfNotNullOrEmpty(schemaRegistry.SslCaLocation, string.Empty);
+            schemaRegistryConfig.SslKeystorePassword = AssignIfNotNullOrEmpty(schemaRegistry.SslKeystorePassword, string.Empty);
+            schemaRegistryConfig.SslKeystoreLocation = AssignIfNotNullOrEmpty(schemaRegistry.SslKeystoreLocation, string.Empty);
         }
 
         TopicPartition topicPartition = null;
@@ -239,13 +239,11 @@ public class Kafka
 
     private static ProducerConfig GetProducerConfig(Input input, Options options, Socket socket, Sasl sasl, Ssl ssl)
     {
-        static string AssignIfNotNullOrEmpty(string source) => !string.IsNullOrEmpty(source) ? source : null;
-
         ProducerConfig config = new()
         {
             Acks = GetAcks(options.Acks),
             ApiVersionRequest = options.ApiVersionRequest,
-            BootstrapServers = input.Host,
+            BootstrapServers = AssignIfNotNullOrEmpty(input.Host, string.Empty),
             CompressionType = GetCompressionType(input.CompressionType),
             EnableIdempotence = options.EnableIdempotence,
             LingerMs = options.LingerMs,
@@ -263,55 +261,60 @@ public class Kafka
             SocketMaxFails = socket.SocketMaxFails,
             SocketNagleDisable = socket.SocketNagleDisable,
             SocketReceiveBufferBytes = socket.SocketReceiveBufferBytes,
-            TransactionalId = options.TransactionalId,
+            TransactionalId = AssignIfNotNullOrEmpty(options.TransactionalId, string.Empty),
             TransactionTimeoutMs = options.TransactionTimeoutMs,
-            Debug = AssignIfNotNullOrEmpty(options.Debug)
+            Debug = AssignIfNotNullOrEmpty(options.Debug, string.Empty)
         };
 
         if (sasl.UseSasl)
         {
             config.SaslMechanism = GetSaslMechanism(sasl.SaslMechanism);
-            config.SaslUsername = sasl.SaslUsername;
-            config.SaslPassword = sasl.SaslPassword;
+            config.SaslUsername = AssignIfNotNullOrEmpty(sasl.SaslUsername, string.Empty);
+            config.SaslPassword = AssignIfNotNullOrEmpty(sasl.SaslPassword, string.Empty);
             config.SaslOauthbearerMethod = GetSaslOauthbearerMethod(sasl.SaslOauthbearerMethod);
-            config.SaslOauthbearerClientId = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerClientId);
-            config.SaslOauthbearerClientSecret = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerClientSecret);
-            config.SaslOauthbearerTokenEndpointUrl = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerTokenEndpointUrl);
-            config.SaslOauthbearerConfig = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerConfig);
-            config.SaslOauthbearerExtensions = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerExtensions);
-            config.SaslOauthbearerScope = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerScope);
+            config.SaslOauthbearerClientId = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerClientId, string.Empty);
+            config.SaslOauthbearerClientSecret = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerClientSecret, string.Empty);
+            config.SaslOauthbearerTokenEndpointUrl = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerTokenEndpointUrl, string.Empty);
+            config.SaslOauthbearerConfig = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerConfig, string.Empty);
+            config.SaslOauthbearerExtensions = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerExtensions, string.Empty);
+            config.SaslOauthbearerScope = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerScope, string.Empty);
         }
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            config.SaslKerberosKeytab = AssignIfNotNullOrEmpty(sasl.SaslKerberosKeytab);
+            config.SaslKerberosKeytab = AssignIfNotNullOrEmpty(sasl.SaslKerberosKeytab, string.Empty);
             config.SaslKerberosMinTimeBeforeRelogin = sasl.SaslKerberosMinTimeBeforeRelogin;
-            config.SaslKerberosPrincipal = sasl.SaslKerberosPrincipal;
-            config.SaslKerberosServiceName = sasl.SaslKerberosServiceName;
+            config.SaslKerberosPrincipal = AssignIfNotNullOrEmpty(sasl.SaslKerberosPrincipal, "kafkaclient");
+            config.SaslKerberosServiceName = AssignIfNotNullOrEmpty(sasl.SaslKerberosServiceName, "kafka");
         }
 
         if (ssl.UseSsl)
         {
             config.SslEndpointIdentificationAlgorithm = GetSslEndpointIdentificationAlgorithm(ssl.SslEndpointIdentificationAlgorithm);
             config.EnableSslCertificateVerification = ssl.EnableSslCertificateVerification;
-            config.SslCertificateLocation = AssignIfNotNullOrEmpty(ssl.SslCertificateLocation);
-            config.SslCertificatePem = AssignIfNotNullOrEmpty(ssl.SslCertificatePem);
-            config.SslCaCertificateStores = AssignIfNotNullOrEmpty(ssl.SslCaCertificateStores);
-            config.SslCaLocation = AssignIfNotNullOrEmpty(ssl.SslCaLocation);
-            config.SslCaPem = AssignIfNotNullOrEmpty(ssl.SslCaPem);
-            config.SslKeyLocation = AssignIfNotNullOrEmpty(ssl.SslKeyLocation);
-            config.SslKeyPassword = AssignIfNotNullOrEmpty(ssl.SslKeyPassword);
-            config.SslKeyPem = AssignIfNotNullOrEmpty(ssl.SslKeyPem);
-            config.SslKeystoreLocation = AssignIfNotNullOrEmpty(ssl.SslKeystoreLocation);
-            config.SslKeystorePassword = AssignIfNotNullOrEmpty(ssl.SslKeystorePassword);
-            config.SslEngineLocation = AssignIfNotNullOrEmpty(ssl.SslEngineLocation);
-            config.SslCipherSuites = AssignIfNotNullOrEmpty(ssl.SslCipherSuites);
-            config.SslCrlLocation = AssignIfNotNullOrEmpty(ssl.SslCrlLocation);
-            config.SslCurvesList = AssignIfNotNullOrEmpty(ssl.SslCurvesList);
-            config.SslSigalgsList = AssignIfNotNullOrEmpty(ssl.SslSigalgsList);
+            config.SslCertificateLocation = AssignIfNotNullOrEmpty(ssl.SslCertificateLocation, string.Empty);
+            config.SslCertificatePem = AssignIfNotNullOrEmpty(ssl.SslCertificatePem, string.Empty);
+            config.SslCaCertificateStores = AssignIfNotNullOrEmpty(ssl.SslCaCertificateStores, "Root");
+            config.SslCaLocation = AssignIfNotNullOrEmpty(ssl.SslCaLocation, string.Empty);
+            config.SslCaPem = AssignIfNotNullOrEmpty(ssl.SslCaPem, string.Empty);
+            config.SslKeyLocation = AssignIfNotNullOrEmpty(ssl.SslKeyLocation, string.Empty);
+            config.SslKeyPassword = AssignIfNotNullOrEmpty(ssl.SslKeyPassword, string.Empty);
+            config.SslKeyPem = AssignIfNotNullOrEmpty(ssl.SslKeyPem, string.Empty);
+            config.SslKeystoreLocation = AssignIfNotNullOrEmpty(ssl.SslKeystoreLocation, string.Empty);
+            config.SslKeystorePassword = AssignIfNotNullOrEmpty(ssl.SslKeystorePassword, string.Empty);
+            config.SslEngineLocation = AssignIfNotNullOrEmpty(ssl.SslEngineLocation, string.Empty);
+            config.SslCipherSuites = AssignIfNotNullOrEmpty(ssl.SslCipherSuites, string.Empty);
+            config.SslCrlLocation = AssignIfNotNullOrEmpty(ssl.SslCrlLocation, string.Empty);
+            config.SslCurvesList = AssignIfNotNullOrEmpty(ssl.SslCurvesList, string.Empty);
+            config.SslSigalgsList = AssignIfNotNullOrEmpty(ssl.SslSigalgsList, string.Empty);
         }
 
         return config;
+    }
+
+    private static string AssignIfNotNullOrEmpty(string source, string defaultValue)
+    {
+        return !string.IsNullOrEmpty(source) ? source : defaultValue;
     }
 
     private static AuthCredentialsSource GetBasicAuthCredentialsSource(AuthCredentialsSources authCredentialsSources)
