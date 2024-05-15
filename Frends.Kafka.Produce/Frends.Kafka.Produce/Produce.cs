@@ -1,5 +1,4 @@
-﻿//using Avro;
-using Avro;
+﻿using Avro;
 using Avro.Generic;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry;
@@ -8,7 +7,6 @@ using Frends.Kafka.Produce.Definitions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -16,6 +14,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Partitioner = Confluent.Kafka.Partitioner;
 
 namespace Frends.Kafka.Produce;
 
