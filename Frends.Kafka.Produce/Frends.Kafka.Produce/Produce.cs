@@ -74,12 +74,6 @@ public class Kafka
     private static async Task<Result> ProduceAvro(string topic, string msgKey, int partition, SchemaRegistry schemaRegistry, ProducerConfig producerConfig, CancellationToken cancellationToken)
     {
         SchemaRegistryConfig schemaRegistryConfig = GetSchemaRegistryConfig(schemaRegistry);
-        if (!string.IsNullOrEmpty(schemaRegistry.SslCaLocation))
-        {
-            schemaRegistryConfig.SslCaLocation = AssignIfNotNullOrEmpty(schemaRegistry.SslCaLocation, string.Empty);
-            schemaRegistryConfig.SslKeystorePassword = AssignIfNotNullOrEmpty(schemaRegistry.SslKeystorePassword, string.Empty);
-            schemaRegistryConfig.SslKeystoreLocation = AssignIfNotNullOrEmpty(schemaRegistry.SslKeystoreLocation, string.Empty);
-        }
 
         TopicPartition topicPartition = null;
         if (partition >= 0)
@@ -223,7 +217,7 @@ public class Kafka
 
     private static SchemaRegistryConfig GetSchemaRegistryConfig(SchemaRegistry schemaRegistry)
     {
-        return new SchemaRegistryConfig()
+        var schemaRegistryConfig = new SchemaRegistryConfig()
         {
             Url = AssignIfNotNullOrEmpty(schemaRegistry.SchemaRegistryUrl, string.Empty),
             BasicAuthCredentialsSource = GetBasicAuthCredentialsSource(schemaRegistry.BasicAuthCredentialsSource),
@@ -232,6 +226,15 @@ public class Kafka
             RequestTimeoutMs = schemaRegistry.RequestTimeoutMs,
             MaxCachedSchemas = schemaRegistry.MaxCachedSchemas,
         };
+
+        if (!string.IsNullOrEmpty(schemaRegistry.SslCaLocation))
+        {
+            schemaRegistryConfig.SslCaLocation = AssignIfNotNullOrEmpty(schemaRegistry.SslCaLocation, string.Empty);
+            schemaRegistryConfig.SslKeystorePassword = AssignIfNotNullOrEmpty(schemaRegistry.SslKeystorePassword, string.Empty);
+            schemaRegistryConfig.SslKeystoreLocation = AssignIfNotNullOrEmpty(schemaRegistry.SslKeystoreLocation, string.Empty);
+        }
+
+        return schemaRegistryConfig;
     }
 
     private static object ConvertTokenToAvroType(JToken token, JTokenType type)

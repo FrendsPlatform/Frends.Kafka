@@ -1,5 +1,4 @@
-﻿using Confluent.SchemaRegistry;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Frends.Kafka.Produce.Definitions;
@@ -37,6 +36,7 @@ public class SchemaRegistry
     /// Basic auth credentials in the form {username}:{password}.
     /// </summary>
     /// <example>foo:bar</example>
+    [PasswordPropertyText]
     [UIHint(nameof(UseSchemaRegistry), "", true)]
     public string BasicAuthUserInfo { get; set; }
 
