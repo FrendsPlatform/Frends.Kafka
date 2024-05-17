@@ -15,15 +15,6 @@ public class Options
     public Ack Acks { get; set; }
 
     /// <summary>
-    /// Request broker's supported API versions to adjust functionality to available protocol features. 
-    /// If set to false, or the ApiVersionRequest fails, the fallback version `broker.version.fallback` will be used. 
-    /// Depends on broker version >=0.10.0. If the request is not supported by (an older) broker the `broker.version.fallback` fallback is used.
-    /// </summary>
-    /// <example>true</example>
-    [DefaultValue(true)]
-    public bool ApiVersionRequest { get; set; }
-
-    /// <summary>
     /// When set to true, the producer will ensure that messages are successfully produced exactly once and in the original produce order. 
     /// The following configuration properties are adjusted automatically (if not modified by the user) when idempotence is enabled:
     /// Options.MaxInFlight=5 (must be less than or equal to 5), 

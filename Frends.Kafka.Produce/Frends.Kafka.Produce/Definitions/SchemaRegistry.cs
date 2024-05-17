@@ -69,14 +69,14 @@ public class SchemaRegistry
     /// File path to CA certificate(s) for verifying the Schema Registry's key. 
     /// System CA certs will be used if not specified.
     /// </summary>
-    /// <example></example>
+    /// <example>/path/to/your/file</example>
     [UIHint(nameof(UseSchemaRegistry), "", true)]
     public string SslCaLocation { get; set; }
 
     /// <summary>
     /// SSL keystore (PKCS#12) location.
     /// </summary>
-    /// <example>/path/to/your/keystore.p12</example>   
+    /// <example>/path/to/your/file</example>   
     [UIHint(nameof(UseSchemaRegistry), "", true)]
     public string SslKeystoreLocation { get; set; }
 
@@ -190,7 +190,7 @@ public class SchemaRegistry
 
 
     /// <summary>
-    /// Field values.
+    /// Field values as an JSON array.
     /// </summary>
     /// <example>
     /// {

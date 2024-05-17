@@ -97,16 +97,16 @@ public class Sasl
 
     /// <summary>
     /// Path to Kerberos keytab file.
-    /// Not supported on Windows.
+    /// Only supported on Linux OS.
     /// </summary>
-    /// <example>c:\temp</example>
+    /// <example>/path/to/your/file</example>
     [UIHint(nameof(UseSasl), "", true)]
     public string SaslKerberosKeytab { get; set; }
 
     /// <summary>
     /// Minimum time in milliseconds between key refresh attempts. 
     /// Disable automatic key refresh by setting this property to 0.
-    /// Not supported on Windows.
+    /// Only supported on Linux OS.
     /// </summary>
     /// <example>60000</example>
     [UIHint(nameof(UseSasl), "", true)]
@@ -114,7 +114,7 @@ public class Sasl
 
     /// <summary>
     /// This client's Kerberos principal name.
-    /// Not supported on Windows.
+    /// Only supported on Linux OS.
     /// </summary>
     /// <example>kafkaclient</example>
     [UIHint(nameof(UseSasl), "", true)]
@@ -123,7 +123,7 @@ public class Sasl
 
     /// <summary>
     /// Kerberos principal name that Kafka runs as, not including /hostname@REALM
-    /// Not supported on Windows.
+    /// Only supported on Linux OS.
     /// </summary>
     /// <example>kafka</example>
     [UIHint(nameof(UseSasl), "", true)]

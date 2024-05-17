@@ -73,16 +73,7 @@ public class Kafka
 
     private static async Task<Result> ProduceAvro(string topic, string msgKey, int partition, SchemaRegistry schemaRegistry, ProducerConfig producerConfig, CancellationToken cancellationToken)
     {
-        var schemaRegistryConfig = new SchemaRegistryConfig()
-        {
-            Url = AssignIfNotNullOrEmpty(schemaRegistry.SchemaRegistryUrl, string.Empty),
-            BasicAuthCredentialsSource = GetBasicAuthCredentialsSource(schemaRegistry.BasicAuthCredentialsSource),
-            EnableSslCertificateVerification = schemaRegistry.EnableSslCertificateVerification,
-            BasicAuthUserInfo = AssignIfNotNullOrEmpty(schemaRegistry.BasicAuthUserInfo, string.Empty),
-            RequestTimeoutMs = schemaRegistry.RequestTimeoutMs,
-            MaxCachedSchemas = schemaRegistry.MaxCachedSchemas,
-        };
-
+        SchemaRegistryConfig schemaRegistryConfig = GetSchemaRegistryConfig(schemaRegistry);
         if (!string.IsNullOrEmpty(schemaRegistry.SslCaLocation))
         {
             schemaRegistryConfig.SslCaLocation = AssignIfNotNullOrEmpty(schemaRegistry.SslCaLocation, string.Empty);
@@ -105,10 +96,17 @@ public class Kafka
         var records = new GenericRecord(avroSchema);
         AddFields(avroSchema, recordsJObject, records);
 
+        var message = new Message<string, GenericRecord> { Key = msgKey, Value = records };
         if (topicPartition != null)
-            return new Result(true, await producer.ProduceAsync(topicPartition, new Message<string, GenericRecord> { Key = msgKey, Value = records }, cancellationToken));
+        {
+            var partitionResult = await producer.ProduceAsync(topicPartition, message, cancellationToken);
+            return new Result(true, partitionResult);
+        }
         else
-            return new Result(true, await producer.ProduceAsync(topic, new Message<string, GenericRecord> { Key = msgKey, Value = records }, cancellationToken));
+        {
+            var topicResult = await producer.ProduceAsync(topic, message, cancellationToken);
+            return new Result(true, topicResult);
+        }
     }
 
     private static void AddFields(RecordSchema schema, JObject jObject, GenericRecord record)
@@ -223,6 +221,19 @@ public class Kafka
         }
     }
 
+    private static SchemaRegistryConfig GetSchemaRegistryConfig(SchemaRegistry schemaRegistry)
+    {
+        return new SchemaRegistryConfig()
+        {
+            Url = AssignIfNotNullOrEmpty(schemaRegistry.SchemaRegistryUrl, string.Empty),
+            BasicAuthCredentialsSource = GetBasicAuthCredentialsSource(schemaRegistry.BasicAuthCredentialsSource),
+            EnableSslCertificateVerification = schemaRegistry.EnableSslCertificateVerification,
+            BasicAuthUserInfo = AssignIfNotNullOrEmpty(schemaRegistry.BasicAuthUserInfo, string.Empty),
+            RequestTimeoutMs = schemaRegistry.RequestTimeoutMs,
+            MaxCachedSchemas = schemaRegistry.MaxCachedSchemas,
+        };
+    }
+
     private static object ConvertTokenToAvroType(JToken token, JTokenType type)
     {
         return type switch
@@ -242,7 +253,6 @@ public class Kafka
         ProducerConfig config = new()
         {
             Acks = GetAcks(options.Acks),
-            ApiVersionRequest = options.ApiVersionRequest,
             BootstrapServers = AssignIfNotNullOrEmpty(input.Host, string.Empty),
             CompressionType = GetCompressionType(input.CompressionType),
             EnableIdempotence = options.EnableIdempotence,
@@ -263,22 +273,31 @@ public class Kafka
             SocketReceiveBufferBytes = socket.SocketReceiveBufferBytes,
             TransactionalId = AssignIfNotNullOrEmpty(options.TransactionalId, string.Empty),
             TransactionTimeoutMs = options.TransactionTimeoutMs,
-            Debug = AssignIfNotNullOrEmpty(options.Debug, string.Empty)
         };
+
+        // This IF statement is required because the setter does not like nulls or empty strings in cases where we do not want to assign anything.
+        if (!string.IsNullOrEmpty(options.Debug))
+            config.Debug = options.Debug;
 
         if (sasl.UseSasl)
         {
             config.SaslMechanism = GetSaslMechanism(sasl.SaslMechanism);
-            config.SaslUsername = AssignIfNotNullOrEmpty(sasl.SaslUsername, string.Empty);
-            config.SaslPassword = AssignIfNotNullOrEmpty(sasl.SaslPassword, string.Empty);
-            config.SaslOauthbearerMethod = GetSaslOauthbearerMethod(sasl.SaslOauthbearerMethod);
-            config.SaslOauthbearerClientId = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerClientId, string.Empty);
-            config.SaslOauthbearerClientSecret = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerClientSecret, string.Empty);
-            config.SaslOauthbearerTokenEndpointUrl = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerTokenEndpointUrl, string.Empty);
-            config.SaslOauthbearerConfig = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerConfig, string.Empty);
-            config.SaslOauthbearerExtensions = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerExtensions, string.Empty);
-            config.SaslOauthbearerScope = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerScope, string.Empty);
+            config.SaslUsername = sasl.SaslUsername;
+            config.SaslPassword = sasl.SaslPassword;
         }
+
+        if (sasl.SaslOauthbearerMethod is SaslOauthbearerMethods.Oidc)
+        {
+            config.SaslOauthbearerMethod = SaslOauthbearerMethod.Oidc;
+            config.SaslOauthbearerClientId = sasl.SaslOauthbearerClientId;
+            config.SaslOauthbearerClientSecret = sasl.SaslOauthbearerClientSecret;
+            config.SaslOauthbearerTokenEndpointUrl = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerTokenEndpointUrl, null);
+            config.SaslOauthbearerConfig = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerConfig, null);
+            config.SaslOauthbearerExtensions = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerExtensions, null);
+            config.SaslOauthbearerScope = AssignIfNotNullOrEmpty(sasl.SaslOauthbearerScope, null);
+        }
+        else
+            config.SaslOauthbearerMethod = SaslOauthbearerMethod.Default;
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -288,6 +307,7 @@ public class Kafka
             config.SaslKerberosServiceName = AssignIfNotNullOrEmpty(sasl.SaslKerberosServiceName, "kafka");
         }
 
+        // Currently no way to truly test these.
         if (ssl.UseSsl)
         {
             config.SslEndpointIdentificationAlgorithm = GetSslEndpointIdentificationAlgorithm(ssl.SslEndpointIdentificationAlgorithm);
@@ -383,16 +403,6 @@ public class Kafka
             Partitioners.Murmur2 => Partitioner.Murmur2,
             Partitioners.Murmur2Random => Partitioner.Murmur2Random,
             _ => throw new ArgumentException($"GetPartitioner exception: Value '{partitioners}' not supported."),
-        };
-    }
-
-    private static SaslOauthbearerMethod GetSaslOauthbearerMethod(SaslOauthbearerMethods saslOauthbearerMethods)
-    {
-        return saslOauthbearerMethods switch
-        {
-            SaslOauthbearerMethods.Default => SaslOauthbearerMethod.Default,
-            SaslOauthbearerMethods.Oidc => SaslOauthbearerMethod.Oidc,
-            _ => throw new ArgumentException($"GetSaslOauthbearerMethod exception: Value '{saslOauthbearerMethods}' not supported."),
         };
     }
 

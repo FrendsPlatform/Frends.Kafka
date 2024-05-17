@@ -37,7 +37,7 @@ public class Ssl
     /// <summary>
     /// Path to client's public key (PEM) used for authentication.
     /// </summary>
-    /// <example>c:\temp</example>
+    /// <example>/path/to/your/file</example>
     [UIHint(nameof(UseSsl), "", true)]
     public string SslCertificateLocation { get; set; }
 
@@ -51,14 +51,14 @@ public class Ssl
     /// <summary>
     /// Path to client's private key (PEM) used for authentication.
     /// </summary>
-    /// <example>c:\temp</example>
+    /// <example>/path/to/your/file</example>
     [UIHint(nameof(UseSsl), "", true)]
     public string SslKeyLocation { get; set; }
 
     /// <summary>
     /// Path to client's keystore (PKCS#12) used for authentication.
     /// </summary>
-    /// <example>c:\temp</example>
+    /// <example>/path/to/your/file</example>
     [UIHint(nameof(UseSsl), "", true)]
     public string SslKeystoreLocation { get; set; }
 
@@ -66,14 +66,14 @@ public class Ssl
     /// Path to OpenSSL engine library. 
     /// OpenSSL >= 1.1.0 required.
     /// </summary>
-    /// <example>c:\temp</example>
+    /// <example>/path/to/your/file</example>
     [UIHint(nameof(UseSsl), "", true)]
     public string SslEngineLocation { get; set; }
 
     /// <summary>
     /// Path to CRL for verifying broker's certificate validity.
     /// </summary>
-    /// <example>c:\temp</example>
+    /// <example>/path/to/your/file</example>
     [UIHint(nameof(UseSsl), "", true)]
     public string SslCrlLocation { get; set; }
 

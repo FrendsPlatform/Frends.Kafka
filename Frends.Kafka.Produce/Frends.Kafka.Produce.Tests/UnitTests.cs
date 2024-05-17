@@ -25,7 +25,7 @@ public class UnitTests
     */
 
     private readonly string _message = $"Hello {DateTime.Now}";
-    private readonly string _topic = "TaskTestTopic";
+    private readonly string _topic = "ProduceBasicTestTopic";
     private readonly string? _bootstrapServers = Environment.GetEnvironmentVariable("ConfluentKafka_BootstrapServers");
     private readonly string? _apiKey = Environment.GetEnvironmentVariable("ConfluentKafka_APIKey");
     private readonly string? _apiKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_APIKeySecret");
@@ -58,7 +58,6 @@ public class UnitTests
         {
             MessageTimeoutMs = 20000,
             Acks = Ack.None,
-            ApiVersionRequest = true,
             EnableIdempotence = false,
             LingerMs = 1000,
             MaxInFlight = 1000000,
@@ -262,43 +261,18 @@ public class UnitTests
     }
 
     [Test]
-    public async Task Kafka_Produce_CompressionTypes_Gzip_Test()
+    public async Task Kafka_Produce_CompressionTypes()
     {
-        _input.CompressionType = CompressionTypes.Gzip;
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
-        ClassicAssert.That(result.Success);
-        ClassicAssert.IsNotNull(result.Data);
-        ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
-    }
+        var values = new[] { CompressionTypes.Gzip, CompressionTypes.Lz4, CompressionTypes.None, CompressionTypes.Snappy, CompressionTypes.Zstd };
 
-    [Test]
-    public async Task Kafka_Produce_CompressionTypes_Snappy_Test()
-    {
-        _input.CompressionType = CompressionTypes.Snappy;
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
-        ClassicAssert.That(result.Success);
-        ClassicAssert.IsNotNull(result.Data);
-        ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
-    }
-
-    [Test]
-    public async Task Kafka_Produce_CompressionTypes_Lz4_Test()
-    {
-        _input.CompressionType = CompressionTypes.Lz4;
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
-        ClassicAssert.That(result.Success);
-        ClassicAssert.IsNotNull(result.Data);
-        ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
-    }
-
-    [Test]
-    public async Task Kafka_Produce_CompressionTypes_Zstd_Test()
-    {
-        _input.CompressionType = CompressionTypes.Zstd;
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
-        ClassicAssert.That(result.Success);
-        ClassicAssert.IsNotNull(result.Data);
-        ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+        foreach (var item in values)
+        {
+            _input.CompressionType = item;
+            var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            ClassicAssert.That(result.Success);
+            ClassicAssert.IsNotNull(result.Data);
+            ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+        }
     }
 
     [Test]
@@ -314,11 +288,16 @@ public class UnitTests
     [Test]
     public async Task Kafka_Produce_Partition_Test()
     {
-        _input.Partition = 0;
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
-        ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsNotNull(result.Data);
-        ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+        var values = new[] { -1, 2 };
+
+        foreach (var item in values)
+        {
+            _input.Partition = item;
+            var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            ClassicAssert.That(result.Success);
+            ClassicAssert.IsNotNull(result.Data);
+            ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+        }
     }
 
     [Test]
@@ -363,7 +342,7 @@ public class UnitTests
     [Test]
     public async Task Kafka_Produce_Avro_Valid()
     {
-        _input.Topic = "TaskTestSchemaTopic";
+        _input.Topic = "ProduceAvroTestTopic";
         _schemaRegistry.UseSchemaRegistry = true;
 
         var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
