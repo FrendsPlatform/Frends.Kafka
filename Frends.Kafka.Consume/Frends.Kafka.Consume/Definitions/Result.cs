@@ -8,20 +8,20 @@ namespace Frends.Kafka.Consume.Definitions;
 public class Result
 {
     /// <summary>
-    /// True if messages have been consumed. 
+    /// True if messages have been consumed without errors. 
     /// </summary>
     /// <example>true</example>
     public bool Success { get; private set; }
 
     /// <summary>
-    /// Message(s).
+    /// Result data.
     /// </summary>
     /// <example>Object { key, value }</example>
-    public List<Message> Messages { get; private set; }
+    public List<Message> Data { get; private set; }
 
-    internal Result(bool success, List<Message> messages)
+    internal Result(bool success, List<Message> data)
     {
         Success = success;
-        Messages = messages;
+        Data = data;
     }
 }

@@ -8,35 +8,18 @@ namespace Frends.Kafka.Consume.Definitions;
 public class Options
 {
     /// <summary>
+    /// Try to decode consumed message key from byte[] to string.
+    /// </summary>
+    /// <example>true</example>
+    [DefaultValue(true)]
+    public bool EncodeMessageKey { get; set; }
+
+    /// <summary>
     /// This field indicates the number of acknowledgements the leader broker must receive from ISR brokers before responding to the request.
     /// </summary>
     /// <example>Ack.None</example>
     [DefaultValue(Ack.None)]
     public Ack Acks { get; set; }
-
-    /// <summary>
-    /// Request broker's supported API versions to adjust functionality to available protocol features. 
-    /// If set to false, or the ApiVersionRequest fails, the fallback version `broker.version.fallback` will be used. 
-    /// Depends on broker version >=0.10.0. If the request is not supported by (an older) broker the `broker.version.fallback` fallback is used.
-    /// </summary>
-    /// <example>true</example>
-    [DefaultValue(true)]
-    public bool ApiVersionRequest { get; set; }
-
-    /// <summary>
-    /// Dictates how long the `broker.version.fallback` fallback is used in the case the ApiVersionRequest fails.
-    /// The ApiVersionRequest is only issued when a new connection to the broker is made (such as after an upgrade).
-    /// </summary>
-    /// <example>0</example>
-    [DefaultValue(0)]
-    public int ApiVersionFallbackMs { get; set; }
-
-    /// <summary>
-    /// Timeout for broker API version requests.
-    /// </summary>
-    /// <example>10000</example>
-    [DefaultValue(10000)]
-    public int ApiVersionRequestTimeoutMs { get; set; }
 
     /// <summary>
     /// The frequency in milliseconds that the consumer offsets are committed (written) to offset storage. 
@@ -45,16 +28,6 @@ public class Options
     /// <example>5000</example>
     [DefaultValue(5000)]
     public int AutoCommitIntervalMs { get; set; }
-
-    /// <summary>
-    /// Allow automatic topic creation on the broker when subscribing to or assigning non-existent topics. 
-    /// The broker must also be configured with `auto.create.topics.enable=true` for this configuraiton to take effect.
-    /// Note: The default value (false) is different from the Java consumer (true). 
-    /// Requires broker version >= 0.11.0.0, for older broker versions only the broker configuration applies.
-    /// </summary>
-    /// <example>false</example>
-    [DefaultValue(false)]
-    public bool AllowAutoCreateTopics { get; set; }
 
     /// <summary>
     /// Action to take when there is no initial offset in offset store or the desired offset is out of range.
@@ -138,7 +111,7 @@ public class Options
     /// Client group id string. 
     /// All clients sharing the same Options.GroupId belong to the same group.
     /// </summary>
-    /// <example>foo</example>
+    /// <example>csharp-group-1</example>
     public string GroupId { get; set; }
 
     /// <summary>
@@ -147,7 +120,7 @@ public class Options
     /// This should be used in combination with a larger Options.SessionTimeoutMs to avoid group rebalances caused by transient unavailability (e.g. process restarts).
     /// Requires broker version >= 2.3.0.
     /// </summary>
-    /// <example>foo</example>
+    /// <example>csharp-group-1</example>
     public string GroupInstanceId { get; set; }
 
     /// <summary>
@@ -236,4 +209,11 @@ public class Options
     /// <example>45000</example>
     [DefaultValue(45000)]
     public int SessionTimeoutMs { get; set; }
+
+    /// <summary>
+    /// A comma-separated list of debug contexts to enable. 
+    /// Detailed Consumer debugging: consumer,cgrp,topic,fetch.
+    /// </summary>
+    /// <example>broker</example>
+    public string Debug { get; set; }
 }

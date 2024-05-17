@@ -6,14 +6,14 @@
 public class Message
 {
     /// <summary>
-    /// Message's key.
+    /// Message's key converted to string.
     /// </summary>
     /// <example>foo</example>
-    public string Key { get; set; }
+    public dynamic Key { get; set; }
 
     /// <summary>
     /// Message's value.
     /// </summary>
     /// <example>bar</example>
-    public string Value { get; set; }
+    public dynamic Value { get; set; }
 }
