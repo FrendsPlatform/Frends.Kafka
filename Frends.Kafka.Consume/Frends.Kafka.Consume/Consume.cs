@@ -84,11 +84,6 @@ public class Kafka
         {
             throw;
         }
-        finally
-        {
-            consumer.Close();
-            consumer.Dispose();
-        }
 
         return new Result(true, result);
     }
@@ -133,11 +128,6 @@ public class Kafka
         catch (Exception)
         {
             throw;
-        }
-        finally
-        {
-            consumer.Close();
-            consumer.Dispose();
         }
 
         return new Result(true, result);

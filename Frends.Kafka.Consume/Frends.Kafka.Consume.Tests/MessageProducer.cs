@@ -33,7 +33,7 @@ namespace Frends.Kafka.Consume.Tests
                     Value = msg
                 };
 
-                var result = await producer.ProduceAsync(topicPartition, message, cancellationToken);
+                await producer.ProduceAsync(topicPartition, message, cancellationToken);
             }
             catch (Exception)
             {
