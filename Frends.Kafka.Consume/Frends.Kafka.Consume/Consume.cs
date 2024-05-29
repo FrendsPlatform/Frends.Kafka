@@ -71,10 +71,6 @@ public class Kafka
                     break;
             }
         }
-        catch (KafkaException ke)
-        {
-            throw new Exception($"ConsumeBasic KafkaException:", ke);
-        }
         catch (Exception ex)
         {
             throw new Exception($"ConsumeBasic exception:", ex);
@@ -120,13 +116,9 @@ public class Kafka
                     break;
             }
         }
-        catch (KafkaException ke)
-        {
-            throw new Exception($"ConsumeBasic KafkaException:", ke);
-        }
         catch (Exception ex)
         {
-            throw new Exception($"ConsumeBasic exception:", ex);
+            throw new Exception($"ConsumeAvro exception:", ex);
         }
 
         return new Result(true, result);
