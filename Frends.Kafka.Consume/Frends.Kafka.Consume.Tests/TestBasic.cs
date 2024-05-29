@@ -36,123 +36,6 @@ public class TestBasic
     private Ssl _ssl = new();
     private SchemaRegistry _schemaRegistry = new();
 
-    private readonly string _records = @"{
-  ""intField"": 1,
-  ""longField"": 1234567890,
-  ""floatField"": 1.23,
-  ""doubleField"": 1.23456789,
-  ""booleanField"": true,
-  ""stringField"": ""Hello, World!"",
-  ""nullField"": null,
-  ""bytesField"": ""dGVzdDE="",
-  ""enumField"": ""RED"",
-  ""arrayField"": [""item1"", ""item2"", ""item3""],
-  ""mapField"": {
-    ""key1"": 1,
-    ""key2"": 2,
-    ""key3"": 3
-  },
-  ""fixedField"": ""YWJjZA=="",
-  ""unionField"": ""Hello, Union!"",
-  ""recordField"": {
-    ""nestedField"": ""Hello, Nested!""
-  }
-}
-";
-    private readonly string _schema = @"{
-  ""fields"": [
-    {
-      ""name"": ""intField"",
-      ""type"": ""int""
-    },
-    {
-      ""name"": ""longField"",
-      ""type"": ""long""
-    },
-    {
-      ""name"": ""floatField"",
-      ""type"": ""float""
-    },
-    {
-      ""name"": ""doubleField"",
-      ""type"": ""double""
-    },
-    {
-      ""name"": ""booleanField"",
-      ""type"": ""boolean""
-    },
-    {
-      ""name"": ""stringField"",
-      ""type"": ""string""
-    },
-    {
-      ""name"": ""nullField"",
-      ""type"": ""null""
-    },
-    {
-      ""name"": ""bytesField"",
-      ""type"": ""bytes""
-    },
-    {
-      ""name"": ""enumField"",
-      ""type"": {
-        ""name"": ""Colors"",
-        ""symbols"": [
-          ""RED"",
-          ""GREEN"",
-          ""BLUE""
-        ],
-        ""type"": ""enum""
-      }
-    },
-    {
-      ""name"": ""arrayField"",
-      ""type"": {
-        ""items"": ""string"",
-        ""type"": ""array""
-      }
-    },
-    {
-      ""name"": ""mapField"",
-      ""type"": {
-        ""type"": ""map"",
-        ""values"": ""int""
-      }
-    },
-    {
-      ""name"": ""fixedField"",
-      ""type"": {
-        ""name"": ""FourBytes"",
-        ""size"": 4,
-        ""type"": ""fixed""
-      }
-    },
-    {
-      ""name"": ""unionField"",
-      ""type"": [
-        ""null"",
-        ""string""
-      ]
-    },
-    {
-      ""name"": ""recordField"",
-      ""type"": {
-        ""fields"": [
-          {
-            ""name"": ""nestedField"",
-            ""type"": ""string""
-          }
-        ],
-        ""name"": ""NestedRecord"",
-        ""type"": ""record""
-      }
-    }
-  ],
-  ""name"": ""sampleRecord"",
-  ""namespace"": ""com.mycorp.mynamespace"",
-  ""type"": ""record""
-}";
-
     [SetUp]
     public void Setup()
     {
@@ -261,6 +144,7 @@ public class TestBasic
         };
     }
 
+    // In comments because this method can be used to manually clear the pool after debugging etc.
     //[TearDown]
     //public void Cleanup()
     //{

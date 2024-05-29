@@ -261,6 +261,7 @@ public class TestSchemaRegistry
         };
     }
 
+    // In comments because this method can be used to manually clear the pool after debugging etc.
     //[TearDown]
     //public void Cleanup()
     //{

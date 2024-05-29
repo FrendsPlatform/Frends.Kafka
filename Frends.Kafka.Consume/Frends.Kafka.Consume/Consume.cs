@@ -32,21 +32,12 @@ public class Kafka
     /// <returns>Object { bool Success, List&lt;Message&gt; Messages }</returns>
     public static Result Consume([PropertyTab] Input input, [PropertyTab] Socket socket, [PropertyTab] Sasl sasl, [PropertyTab] Ssl ssl, [PropertyTab] SchemaRegistry schemaRegistry, [PropertyTab] Options options, CancellationToken cancellationToken)
     {
-        try
-        {
-            if (options.MaxPollIntervalMs < options.SessionTimeoutMs)
-                throw new Exception("Options.MaxPollIntervalMs must be >= Options.SessionTimeoutMs");
+        if (options.MaxPollIntervalMs < options.SessionTimeoutMs)
+            throw new Exception("Options.MaxPollIntervalMs must be >= Options.SessionTimeoutMs");
 
-            return schemaRegistry.UseSchemaRegistry
-                ? ConsumeAvro(input.Partition, input.Topic, input.MessageCount, input.Timeout, options.EncodeMessageKey, schemaRegistry, Configurations(input, options, socket, sasl, ssl), cancellationToken)
-                : ConsumeBasic(input.Partition, input.Topic, input.MessageCount, input.Timeout, options.EncodeMessageKey, Configurations(input, options, socket, sasl, ssl), cancellationToken);
-
-        }
-        catch (Exception)
-        {
-
-            throw;
-        }
+        return schemaRegistry.UseSchemaRegistry
+            ? ConsumeAvro(input.Partition, input.Topic, input.MessageCount, input.Timeout, options.EncodeMessageKey, schemaRegistry, Configurations(input, options, socket, sasl, ssl), cancellationToken)
+            : ConsumeBasic(input.Partition, input.Topic, input.MessageCount, input.Timeout, options.EncodeMessageKey, Configurations(input, options, socket, sasl, ssl), cancellationToken);
     }
 
     private static Result ConsumeBasic(int partition, string topic, int messageCount, int timeout, bool encodeKey, ConsumerConfig consumerConfig, CancellationToken cancellationToken)
@@ -80,9 +71,13 @@ public class Kafka
                     break;
             }
         }
-        catch (Exception)
+        catch (KafkaException ke)
         {
-            throw;
+            throw new Exception($"ConsumeBasic KafkaException:", ke);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"ConsumeBasic exception:", ex);
         }
 
         return new Result(true, result);
@@ -125,9 +120,13 @@ public class Kafka
                     break;
             }
         }
-        catch (Exception)
+        catch (KafkaException ke)
         {
-            throw;
+            throw new Exception($"ConsumeBasic KafkaException:", ke);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"ConsumeBasic exception:", ex);
         }
 
         return new Result(true, result);
@@ -326,16 +325,6 @@ public class Kafka
             Ack.Leader => Acks.Leader,
             Ack.All => Acks.All,
             _ => throw new Exception("GetAcks error: Value not supported."),
-        };
-    }
-
-    private static SaslOauthbearerMethod GetSaslOauthbearerMethod(SaslOauthbearerMethods saslOauthbearerMethod)
-    {
-        return saslOauthbearerMethod switch
-        {
-            SaslOauthbearerMethods.Default => SaslOauthbearerMethod.Default,
-            SaslOauthbearerMethods.Oidc => SaslOauthbearerMethod.Oidc,
-            _ => throw new Exception("GetSaslOauthbearerMethod error: GetSaslOauthbearerMethod not supported."),
         };
     }
 
