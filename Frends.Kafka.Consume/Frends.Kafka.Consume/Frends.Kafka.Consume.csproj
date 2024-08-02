@@ -14,13 +14,13 @@
 	<PackageProjectUrl>https://frends.com/</PackageProjectUrl>
 	<RepositoryUrl>https://github.com/FrendsPlatform/Frends.Kafka</RepositoryUrl>
   </PropertyGroup>
-	
+
   <ItemGroup>
 	  <None Include="FrendsTaskMetadata.json" Pack="true" PackagePath="/">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
   </ItemGroup>
-	
+
   <ItemGroup>
     <PackageReference Include="Confluent.Kafka" Version="2.4.0" />
     <PackageReference Include="Confluent.SchemaRegistry" Version="2.4.0" />

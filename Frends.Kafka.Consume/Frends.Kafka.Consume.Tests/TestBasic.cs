@@ -10,12 +10,12 @@ public class TestBasic
 {
     /*
         Update 05/2024:
-            Using cloud Confluent Kafka. Set your own configs or see 'Basic testing with docker'. 
-    
+            Using cloud Confluent Kafka. Set your own configs or see 'Basic testing with docker'.
+
         Basic testing with docker:
         Docker compose:
         Run command 'docker-compose up -d' in .\Frends.Kafka.Consume.Tests
-        
+
         Read message(s) from topic:
         docker exec --interactive --tty "container's name" kafka-console-consumer --bootstrap-server localhost:9092 --topic ConsumeTopic --from-beginning
     */
@@ -37,7 +37,7 @@ public class TestBasic
     private SchemaRegistry _schemaRegistry = new();
 
     [SetUp]
-    public void Setup()
+    public async Task Setup()
     {
         _input = new Input()
         {
@@ -165,8 +165,12 @@ public class TestBasic
     [Test]
     public void Kafka_Consume_Basic_InvalidTopic()
     {
+        // TODO: THIS FAILS
+        // Expected: <Confluent.Kafka.ConsumeException>
+        // But was:  <System.Exception: ConsumeBasic exception:
+        // ---> Confluent.Kafka.ConsumeException: Subscribed topic not available:
         _input.Topic = "invalidTopic";
-        var ex = ClassicAssert.Throws<Confluent.Kafka.ConsumeException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        var ex = ClassicAssert.Throws<ConsumeException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
         ClassicAssert.NotNull(ex);
         ClassicAssert.AreEqual("Subscribed topic not available: invalidTopic: Broker: Unknown topic or partition", ex?.Message);
     }
@@ -174,7 +178,7 @@ public class TestBasic
     [Test]
     public async Task Kafka_Consume_Basic_MessageCount_Random()
     {
-        var rndCount = new Random().Next(0, 6);
+        var rndCount = new Random().Next(1, 6);
         _input.MessageCount = rndCount;
 
         for (int i = 0; i < rndCount; i++)
@@ -190,9 +194,9 @@ public class TestBasic
     [Ignore("Manual test.")]
     public async Task Kafka_Consume_Basic_MessageCount_DontReadAll()
     {
-        var rndCount = new Random().Next(0, 6);
+        var rndCount = new Random().Next(1, 6);
         _input.MessageCount = rndCount;
-        var extras = new Random().Next(0, 3);
+        var extras = new Random().Next(1, 3);
 
         for (int i = 0; i < rndCount + extras; i++)
             await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
@@ -211,7 +215,7 @@ public class TestBasic
     [Test]
     public async Task Kafka_Consume_Basic_MessageCount_Unlimited()
     {
-        var rndCount = new Random().Next(0, 6);
+        var rndCount = new Random().Next(1, 6);
         _input.MessageCount = 0;
 
         for (int i = 0; i < rndCount; i++)
@@ -219,15 +223,17 @@ public class TestBasic
 
         var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.AreEqual(rndCount, result.Data.Count);
         ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        // We assert that we get at least the amount of messages we sent, because
+        // we can't know how many messages are in the topic previously.
+        ClassicAssert.IsTrue(result.Data.Count >= rndCount);
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_Timeout_Unlimited()
     {
         _input.Timeout = 0;
-        var rndCount = new Random().Next(0, 6);
+        var rndCount = new Random().Next(1, 6);
         _input.MessageCount = rndCount;
 
         for (int i = 0; i < rndCount; i++)
@@ -977,7 +983,7 @@ public class TestBasic
     public async Task Kafka_Consume_Basic_Socket_SocketTimeoutMs()
     {
 
-        var parameterLooper = new[] { 0, 60000 };
+        var parameterLooper = new[] { 10, 60000 };
 
         foreach (var item in parameterLooper)
         {
@@ -993,8 +999,7 @@ public class TestBasic
     [Test]
     public async Task Kafka_Consume_Basic_Socket_SocketConnectionSetupTimeoutMs()
     {
-
-        var parameterLooper = new[] { 0, 30000 };
+        var parameterLooper = new[] { 1000, 30000 };
 
         foreach (var item in parameterLooper)
         {

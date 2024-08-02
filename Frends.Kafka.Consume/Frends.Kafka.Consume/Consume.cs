@@ -45,35 +45,30 @@ public class Kafka
         var result = new List<Message>();
         using var consumer = new ConsumerBuilder<byte[], string>(consumerConfig).Build();
 
-        try
+        if (partition >= 0)
         {
-            if (partition >= 0)
-            {
-                var topicPartition = new TopicPartition(topic, new Partition(partition));
-                consumer.Assign(topicPartition);
-            }
-            else
-                consumer.Subscribe(topic);
-
-            while (messageCount == 0 || result.Count < messageCount)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var cr = timeout > 0 ? consumer.Consume(timeout) : consumer.Consume(cancellationToken);
-                if (cr != null)
-                    result.Add(new Message()
-                    {
-                        Key = cr.Message.Key != null
-                            ? encodeKey ? Encoding.UTF8.GetString(cr.Message.Key) : cr.Message.Key
-                            : null,
-                        Value = cr.Message.Value ?? null,
-                    });
-                else
-                    break;
-            }
+            var topicPartition = new TopicPartition(topic, new Partition(partition));
+            consumer.Assign(topicPartition);
         }
-        catch (Exception ex)
+        else
+            consumer.Subscribe(topic);
+
+        while (messageCount == 0 || result.Count < messageCount)
         {
-            throw new Exception($"ConsumeBasic exception:", ex);
+            cancellationToken.ThrowIfCancellationRequested();
+            var cr = timeout > 0
+                ? consumer.Consume(timeout)
+                : consumer.Consume(cancellationToken);
+            if (cr != null)
+                result.Add(new Message
+                {
+                    Key = cr.Message.Key != null
+                        ? encodeKey ? Encoding.UTF8.GetString(cr.Message.Key) : cr.Message.Key
+                        : null,
+                    Value = cr.Message.Value ?? null,
+                });
+            else
+                break;
         }
 
         return new Result(true, result);
@@ -90,35 +85,28 @@ public class Kafka
             .SetValueDeserializer(new AvroDeserializer<GenericRecord>(cachedSchemaRegistryClient).AsSyncOverAsync())
             .Build();
 
-        try
+        if (partition >= 0)
         {
-            if (partition >= 0)
-            {
-                var topicPartition = new TopicPartition(topic, new Partition(partition));
-                consumer.Assign(topicPartition);
-            }
-            else
-                consumer.Subscribe(topic);
-
-            while (messageCount == 0 || result.Count < messageCount)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var cr = timeout > 0 ? consumer.Consume(timeout) : consumer.Consume(cancellationToken);
-                if (cr != null)
-                    result.Add(new Message()
-                    {
-                        Key = cr.Message.Key != null
-                            ? encodeKey ? Encoding.UTF8.GetString(cr.Message.Key) : cr.Message.Key
-                            : null,
-                        Value = cr.Message.Value ?? null,
-                    });
-                else
-                    break;
-            }
+            var topicPartition = new TopicPartition(topic, new Partition(partition));
+            consumer.Assign(topicPartition);
         }
-        catch (Exception ex)
+        else
+            consumer.Subscribe(topic);
+
+        while (messageCount == 0 || result.Count < messageCount)
         {
-            throw new Exception($"ConsumeAvro exception:", ex);
+            cancellationToken.ThrowIfCancellationRequested();
+            var cr = timeout > 0 ? consumer.Consume(timeout) : consumer.Consume(cancellationToken);
+            if (cr != null)
+                result.Add(new Message()
+                {
+                    Key = cr.Message.Key != null
+                        ? encodeKey ? Encoding.UTF8.GetString(cr.Message.Key) : cr.Message.Key
+                        : null,
+                    Value = cr.Message.Value ?? null,
+                });
+            else
+                break;
         }
 
         return new Result(true, result);

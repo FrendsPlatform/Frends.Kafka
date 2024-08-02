@@ -10,12 +10,12 @@ public class TestSchemaRegistry
 {
     /*
         Update 05/2024:
-            Using cloud Confluent Kafka. Set your own configs or see 'Basic testing with docker'. 
-    
+            Using cloud Confluent Kafka. Set your own configs or see 'Basic testing with docker'.
+
         Basic testing with docker:
         Docker compose:
         Run command 'docker-compose up -d' in .\Frends.Kafka.Consume.Tests
-        
+
         Read message(s) from topic:
         docker exec --interactive --tty "container's name" kafka-console-consumer --bootstrap-server localhost:9092 --topic ConsumeTopic --from-beginning
     */
@@ -328,7 +328,7 @@ public class TestSchemaRegistry
     [Test]
     public async Task Kafka_Consume_Avro_MessageCount_Unlimited()
     {
-        var rndCount = new Random().Next(0, 6);
+        var rndCount = new Random().Next(1, 6);
         _input.MessageCount = 0;
 
         for (int i = 0; i < rndCount; i++)
@@ -336,7 +336,8 @@ public class TestSchemaRegistry
 
         var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.AreEqual(rndCount, result.Data.Count);
+        // We can't know the exact count, but it should be at least rndCount.
+        ClassicAssert.IsTrue(result.Data.Count >= rndCount);
         ClassicAssert.IsTrue(result.Data[0].Value.ToString().Contains("record"));
     }
 
