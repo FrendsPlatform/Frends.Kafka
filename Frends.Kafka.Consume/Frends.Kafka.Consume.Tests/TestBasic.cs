@@ -20,6 +20,7 @@ public class TestBasic
         docker exec --interactive --tty "container's name" kafka-console-consumer --bootstrap-server localhost:9092 --topic ConsumeTopic --from-beginning
     */
 
+
     private readonly string _message = $"Hello {DateTime.Now}";
     private readonly string _topic = "ConsumeBasicTopic";
     private readonly string? _bootstrapServers = Environment.GetEnvironmentVariable("ConfluentKafka_BootstrapServers");
