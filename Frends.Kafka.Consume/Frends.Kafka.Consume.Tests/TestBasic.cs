@@ -165,10 +165,6 @@ public class TestBasic
     [Test]
     public void Kafka_Consume_Basic_InvalidTopic()
     {
-        // TODO: THIS FAILS
-        // Expected: <Confluent.Kafka.ConsumeException>
-        // But was:  <System.Exception: ConsumeBasic exception:
-        // ---> Confluent.Kafka.ConsumeException: Subscribed topic not available:
         _input.Topic = "invalidTopic";
         var ex = ClassicAssert.Throws<ConsumeException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
         ClassicAssert.NotNull(ex);
