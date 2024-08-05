@@ -43,6 +43,7 @@ public class Input
 
     /// <summary>
     /// Set Kafka partition.
+    /// Consume from all topic's partitions if set to -1.
     /// </summary>
     /// <example>10</example>
     public int Partition { get; set; }
