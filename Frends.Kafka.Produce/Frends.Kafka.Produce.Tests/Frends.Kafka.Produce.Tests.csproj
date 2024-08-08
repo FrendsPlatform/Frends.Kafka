@@ -10,6 +10,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Confluent.Kafka" Version="2.4.0" />
+		<PackageReference Include="dotenv.net" Version="3.2.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="8.0.0" />
 		<PackageReference Include="MSTest.TestFramework" Version="3.3.1" />

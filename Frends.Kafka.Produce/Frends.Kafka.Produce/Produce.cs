@@ -37,18 +37,10 @@ public class Kafka
     /// <returns>Object { bool Success, dynamic Data }</returns>
     public static async Task<Result> Produce([PropertyTab] Input input, [PropertyTab] Socket socket, [PropertyTab] Sasl sasl, [PropertyTab] Ssl ssl, [PropertyTab] SchemaRegistry schemaRegistry, [PropertyTab] Options options, CancellationToken cancellationToken)
     {
-        try
-        {
-            var producerConfig = GetProducerConfig(input, options, socket, sasl, ssl);
-            if (schemaRegistry.UseSchemaRegistry)
-                return await ProduceAvro(input.Topic, input.Key, input.Partition, schemaRegistry, producerConfig, cancellationToken);
-            else
-                return await ProduceBasic(input.Topic, input.Partition, input.Key, input.Message, producerConfig, cancellationToken);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
+        var producerConfig = GetProducerConfig(input, options, socket, sasl, ssl);
+        if (schemaRegistry.UseSchemaRegistry)
+            return await ProduceAvro(input.Topic, input.Key, input.Partition, schemaRegistry, producerConfig, cancellationToken);
+        return await ProduceBasic(input.Topic, input.Partition, input.Key, input.Message, producerConfig, cancellationToken);
     }
 
     private static async Task<Result> ProduceBasic(string topic, int partition, string msgKey, string msg, ProducerConfig producerConfig, CancellationToken cancellationToken)
