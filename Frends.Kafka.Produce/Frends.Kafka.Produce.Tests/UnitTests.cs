@@ -32,9 +32,15 @@ public class UnitTests
     private readonly string? _bootstrapServers = Environment.GetEnvironmentVariable("ConfluentKafka_BootstrapServers");
     private readonly string? _apiKey = Environment.GetEnvironmentVariable("ConfluentKafka_APIKey");
     private readonly string? _apiKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_APIKeySecret");
-    private readonly string? _schemaRegistryURL = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryURL");
-    private readonly string? _schemaRegistryAPIKey = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKey");
-    private readonly string? _schemaRegistryAPIKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKeySecret");
+
+    private readonly string? _schemaRegistryURL =
+        Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryURL");
+
+    private readonly string? _schemaRegistryAPIKey =
+        Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKey");
+
+    private readonly string? _schemaRegistryAPIKeySecret =
+        Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKeySecret");
 
     private Input _input = new();
     private Options _options = new();
@@ -266,7 +272,11 @@ public class UnitTests
     [Test]
     public async Task Kafka_Produce_CompressionTypes()
     {
-        var values = new[] { CompressionTypes.Gzip, CompressionTypes.Lz4, CompressionTypes.None, CompressionTypes.Snappy, CompressionTypes.Zstd };
+        var values = new[]
+        {
+            CompressionTypes.Gzip, CompressionTypes.Lz4, CompressionTypes.None, CompressionTypes.Snappy,
+            CompressionTypes.Zstd
+        };
 
         foreach (var item in values)
         {
@@ -339,7 +349,8 @@ public class UnitTests
     public void Kafka_ErrorHandling_Test()
     {
         _options.MessageTimeoutMs = 1;
-        var ex = ClassicAssert.ThrowsAsync<InvalidOperationException>(() => Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        var ex = ClassicAssert.ThrowsAsync<InvalidOperationException>(() =>
+            Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
     }
 
     [Test]
@@ -361,7 +372,8 @@ public class UnitTests
         ClassicAssert.AreEqual("Hello, World!", consumedRecord["stringField"]);
         ClassicAssert.AreEqual(null, consumedRecord["nullField"]);
         ClassicAssert.AreEqual("RED", ((GenericEnum)consumedRecord["enumField"]).Value);
-        CollectionAssert.AreEqual(new List<string> { "item1", "item2", "item3" }, ((object[])consumedRecord["arrayField"]).Cast<string>().ToList());
+        CollectionAssert.AreEqual(new List<string> { "item1", "item2", "item3" },
+            ((object[])consumedRecord["arrayField"]).Cast<string>().ToList());
         ClassicAssert.AreEqual("Hello, Union!", consumedRecord["unionField"]);
         ClassicAssert.AreEqual("Hello, Nested!", ((GenericRecord)consumedRecord["recordField"])["nestedField"]);
 
@@ -375,17 +387,19 @@ public class UnitTests
         CollectionAssert.AreEqual(expectedBytes, actualBytes2);
 
         var expectedMap = new Dictionary<string, int> { { "key1", 1 }, { "key2", 2 }, { "key3", 3 } };
-        var actualMap = ((Dictionary<string, object>)consumedRecord["mapField"]).ToDictionary(kvp => kvp.Key, kvp => Convert.ToInt32(kvp.Value));
+        var actualMap =
+            ((Dictionary<string, object>)consumedRecord["mapField"]).ToDictionary(kvp => kvp.Key,
+                kvp => Convert.ToInt32(kvp.Value));
         CollectionAssert.AreEqual(expectedMap, actualMap);
     }
 
     [Test]
     public void Kafka_Produce_Avro_InValid_intFieldShouldNotBeString()
     {
-      _input.Topic = "TaskTestSchemaTopic";
+        _input.Topic = "TaskTestSchemaTopic";
 
-      _schemaRegistry.UseSchemaRegistry = true;
-      _schemaRegistry.Records = @"{
+        _schemaRegistry.UseSchemaRegistry = true;
+        _schemaRegistry.Records = @"{
   ""intField"": ""asd"",
   ""longField"": 1234567890,
   ""floatField"": 1.23,
@@ -408,7 +422,7 @@ public class UnitTests
   }
 }
 ";
-      _schemaRegistry.SchemaJson = @"{
+        _schemaRegistry.SchemaJson = @"{
   ""fields"": [
     {
       ""name"": ""intField"",
@@ -501,8 +515,8 @@ public class UnitTests
   ""namespace"": ""com.mycorp.mynamespace"",
   ""type"": ""record""
 }";
-      ClassicAssert.ThrowsAsync<FormatException>(() =>
-        Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        ClassicAssert.ThrowsAsync<FormatException>(() =>
+            Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
     }
 
     [Test]
@@ -529,7 +543,7 @@ public class UnitTests
     [Test]
     public void AddFields_UnionFieldMissing_SetsDefaultValue()
     {
-      var schema = (RecordSchema)Schema.Parse(@"{
+        var schema = (RecordSchema)Schema.Parse(@"{
   ""name"": ""sampleRecord"",
   ""namespace"": ""com.mycorp.mynamespace"",
   ""type"": ""record"",
@@ -542,10 +556,10 @@ public class UnitTests
       ]}
   ],
 }");
-      var jObject = new JObject();
-      var genericRecord = new GenericRecord(schema);
-      Kafka.AddFields(schema, jObject, genericRecord);
-      ClassicAssert.AreEqual("Hello, Union!", genericRecord["unionField"].ToString());
+        var jObject = new JObject();
+        var genericRecord = new GenericRecord(schema);
+        Kafka.AddFields(schema, jObject, genericRecord);
+        ClassicAssert.AreEqual("Hello, Union!", genericRecord["unionField"].ToString());
     }
 
     [Test]
