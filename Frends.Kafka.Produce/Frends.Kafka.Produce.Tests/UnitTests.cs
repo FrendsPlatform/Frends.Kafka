@@ -7,6 +7,9 @@ using Frends.Kafka.Produce.Definitions;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 using System.Text;
+using Avro;
+using Newtonsoft.Json.Linq;
+using Schema = Avro.Schema;
 
 namespace Frends.Kafka.Produce.Tests;
 
@@ -15,8 +18,8 @@ public class UnitTests
 {
     /*
         Update 05/2024:
-            Using cloud Confluent Kafka. Set your own configs or see 'Basic testing with docker'. 
-    
+            Using cloud Confluent Kafka. Set your own configs or see 'Basic testing with docker'.
+
         Basic testing with docker:
             docker-compose up -d
             Read message(s) from topic:
@@ -379,10 +382,10 @@ public class UnitTests
     [Test]
     public void Kafka_Produce_Avro_InValid_intFieldShouldNotBeString()
     {
-        _input.Topic = "TaskTestSchemaTopic";
+      _input.Topic = "TaskTestSchemaTopic";
 
-        _schemaRegistry.UseSchemaRegistry = true;
-        _schemaRegistry.Records = @"{
+      _schemaRegistry.UseSchemaRegistry = true;
+      _schemaRegistry.Records = @"{
   ""intField"": ""asd"",
   ""longField"": 1234567890,
   ""floatField"": 1.23,
@@ -405,7 +408,7 @@ public class UnitTests
   }
 }
 ";
-        _schemaRegistry.SchemaJson = @"{
+      _schemaRegistry.SchemaJson = @"{
   ""fields"": [
     {
       ""name"": ""intField"",
@@ -498,7 +501,81 @@ public class UnitTests
   ""namespace"": ""com.mycorp.mynamespace"",
   ""type"": ""record""
 }";
-        ClassicAssert.ThrowsAsync<FormatException>(() => Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+      ClassicAssert.ThrowsAsync<FormatException>(() =>
+        Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+    }
+
+    [Test]
+    public void AddFields_UnionFieldMissing_SetsNullValue()
+    {
+        var schema = (RecordSchema)Schema.Parse(@"{
+  ""name"": ""sampleRecord"",
+  ""namespace"": ""com.mycorp.mynamespace"",
+  ""type"": ""record"",
+  ""fields"": [ 
+      {  ""name"": ""unionField"",
+      ""type"": [
+        ""null"",
+        ""string""
+      ]}
+  ],
+}");
+        var jObject = new JObject();
+        var genericRecord = new GenericRecord(schema);
+        Kafka.AddFields(schema, jObject, genericRecord);
+        ClassicAssert.AreEqual(null, genericRecord["unionField"]);
+    }
+
+    [Test]
+    public void AddFields_UnionFieldMissing_SetsDefaultValue()
+    {
+      var schema = (RecordSchema)Schema.Parse(@"{
+  ""name"": ""sampleRecord"",
+  ""namespace"": ""com.mycorp.mynamespace"",
+  ""type"": ""record"",
+  ""fields"": [ 
+      {  ""name"": ""unionField"",
+      ""default"": ""Hello, Union!"",
+      ""type"": [
+        ""null"",
+        ""string""
+      ]}
+  ],
+}");
+      var jObject = new JObject();
+      var genericRecord = new GenericRecord(schema);
+      Kafka.AddFields(schema, jObject, genericRecord);
+      ClassicAssert.AreEqual("Hello, Union!", genericRecord["unionField"].ToString());
+    }
+
+    [Test]
+    public void GetProducerConfig()
+    {
+        var result = Kafka.GetProducerConfig(_input, _options, _socket, _sasl, _ssl);
+        ClassicAssert.AreEqual(_input.Host, result.BootstrapServers);
+        ClassicAssert.AreEqual(SecurityProtocol.SaslSsl, result.SecurityProtocol);
+        ClassicAssert.AreEqual(_sasl.SaslUsername, result.SaslUsername);
+        ClassicAssert.AreEqual(_sasl.SaslPassword, result.SaslPassword);
+        ClassicAssert.AreEqual(SaslMechanism.Plain, result.SaslMechanism);
+
+        // Debug
+        _options.Debug = "all";
+        result = Kafka.GetProducerConfig(_input, _options, _socket, _sasl, _ssl);
+        ClassicAssert.AreEqual("all", result.Debug);
+
+        // Sasl
+        _sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
+        _sasl.SaslOauthbearerClientId = "client-id";
+        result = Kafka.GetProducerConfig(_input, _options, _socket, _sasl, _ssl);
+        ClassicAssert.AreEqual(SaslOauthbearerMethod.Oidc, result.SaslOauthbearerMethod);
+        ClassicAssert.AreEqual(_sasl.SaslOauthbearerClientId, result.SaslOauthbearerClientId);
+
+        // UseSsl
+        _ssl.UseSsl = true;
+        _ssl.SslKeyPassword = "cert123";
+        result = Kafka.GetProducerConfig(_input, _options, _socket, _sasl, _ssl);
+        ClassicAssert.AreEqual(true, result.EnableSslCertificateVerification);
+        ClassicAssert.AreEqual("cert123", result.SslKeyPassword);
     }
 
     private ConsumeResult<string, string> ConsumeBasic()

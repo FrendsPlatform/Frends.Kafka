@@ -95,7 +95,7 @@ public class Kafka
         }
     }
 
-    private static void AddFields(RecordSchema schema, JObject jObject, GenericRecord record)
+    internal static void AddFields(RecordSchema schema, JObject jObject, GenericRecord record)
     {
         foreach (var field in schema.Fields)
         {
@@ -243,7 +243,7 @@ public class Kafka
         };
     }
 
-    private static ProducerConfig GetProducerConfig(Input input, Options options, Socket socket, Sasl sasl, Ssl ssl)
+    internal static ProducerConfig GetProducerConfig(Input input, Options options, Socket socket, Sasl sasl, Ssl ssl)
     {
         ProducerConfig config = new()
         {
