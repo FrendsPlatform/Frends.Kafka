@@ -15,15 +15,6 @@ public class Options
     public Ack Acks { get; set; }
 
     /// <summary>
-    /// Request broker's supported API versions to adjust functionality to available protocol features. 
-    /// If set to false, or the ApiVersionRequest fails, the fallback version `broker.version.fallback` will be used. 
-    /// Depends on broker version >=0.10.0. If the request is not supported by (an older) broker the `broker.version.fallback` fallback is used.
-    /// </summary>
-    /// <example>true</example>
-    [DefaultValue(true)]
-    public bool ApiVersionRequest { get; set; }
-
-    /// <summary>
     /// When set to true, the producer will ensure that messages are successfully produced exactly once and in the original produce order. 
     /// The following configuration properties are adjusted automatically (if not modified by the user) when idempotence is enabled:
     /// Options.MaxInFlight=5 (must be less than or equal to 5), 
@@ -50,7 +41,7 @@ public class Options
     /// </summary>
     /// <example>1000000</example>
     [DefaultValue(1000000)]
-    public int MaxInFlight { get; set; } = 1000000;
+    public int MaxInFlight { get; set; }
 
     /// <summary>
     /// Local message timeout. This value is only enforced locally and limits the time a produced message waits for successful delivery. A time of 0 is infinite. 
@@ -68,7 +59,7 @@ public class Options
     /// </summary>
     /// <example>1000000</example>
     [DefaultValue(1000000)]
-    public int MessageMaxBytes { get; set; } = 1000000;
+    public int MessageMaxBytes { get; set; }
 
     /// <summary>
     /// How many times to retry sending a failing Message. 
@@ -91,14 +82,14 @@ public class Options
     /// </summary>
     /// <example>1048576</example>
     [DefaultValue(1048576)]
-    public int QueueBufferingMaxKbytes { get; set; } = 1048576;
+    public int QueueBufferingMaxKbytes { get; set; }
 
     /// <summary>
     /// Maximum number of messages allowed on the producer queue. This queue is shared by all topics and partitions.
     /// </summary>
     /// <example>100000</example>
     [DefaultValue(100000)]
-    public int QueueBufferingMaxMessages { get; set; } = 100000;
+    public int QueueBufferingMaxMessages { get; set; }
 
     /// <summary>
     /// Enables the transactional producer. 
@@ -117,5 +108,12 @@ public class Options
     /// </summary>
     /// <example>60000</example>
     [DefaultValue(60000)]
-    public int TransactionTimeoutMs { get; set; } = 60000;
+    public int TransactionTimeoutMs { get; set; }
+
+    /// <summary>
+    /// A comma-separated list of debug contexts to enable. 
+    /// Detailed Producer debugging: broker,topic,msg.
+    /// </summary>
+    /// <example>broker</example>
+    public string Debug { get; set; }
 }
