@@ -111,6 +111,16 @@ public class Options
     public int TransactionTimeoutMs { get; set; }
 
     /// <summary>
+    /// Client ID string. 
+    /// An ID string to pass to the server when making requests. The purpose of this is to be able to track the source of requests 
+    /// beyond just ip/port by allowing a logical application name to be included in server-side request logging.
+    /// Defaults to "Frends.Kafka.Produce".
+    /// </summary>
+    /// <example>kafka-client-1</example>
+    [DefaultValue("Frends.Kafka.Produce")]
+    public string ClientId { get; set; }
+
+    /// <summary>
     /// A comma-separated list of debug contexts to enable. 
     /// Detailed Producer debugging: broker,topic,msg.
     /// </summary>

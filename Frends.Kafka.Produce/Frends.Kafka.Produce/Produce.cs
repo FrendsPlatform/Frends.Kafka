@@ -268,6 +268,7 @@ public class Kafka
             SocketReceiveBufferBytes = socket.SocketReceiveBufferBytes,
             TransactionalId = AssignIfNotNullOrEmpty(options.TransactionalId, string.Empty),
             TransactionTimeoutMs = options.TransactionTimeoutMs,
+            ClientId = AssignIfNotNullOrEmpty(options.ClientId, "Frends.Kafka.Produce"),
         };
 
         // This IF statement is required because the setter does not like nulls or empty strings in cases where we do not want to assign anything.

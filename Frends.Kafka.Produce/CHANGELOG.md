@@ -1,4 +1,8 @@
 # Changelog
+## [2.1.0] - 2025-06-04
+### Added
+- Added Client ID option to be able to track the source of requests beyond just ip/port by allowing a logical application name to be included in server-side request logging.
+
 ## [2.0.0] - 2024-05-14
 ### Added
 - Support for Confluent Schema Registry based Avro.

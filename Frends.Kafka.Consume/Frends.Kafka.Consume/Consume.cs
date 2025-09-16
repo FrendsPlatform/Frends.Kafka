@@ -150,6 +150,7 @@ public class Kafka
             FetchMinBytes = options.FetchMinBytes,
             FetchWaitMaxMs = options.FetchWaitMaxMs,
             GroupInstanceId = AssignIfNotNullOrEmpty(options.GroupInstanceId, null),
+            ClientId = AssignIfNotNullOrEmpty(options.ClientId, "Frends.Kafka.Consume"),
             HeartbeatIntervalMs = options.HeartbeatIntervalMs,
             IsolationLevel = GetIsolationLevel(options),
             MaxPollIntervalMs = options.MaxPollIntervalMs,
