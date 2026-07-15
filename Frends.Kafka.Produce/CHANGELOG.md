@@ -1,4 +1,8 @@
 # Changelog
+## [2.1.0] - 2026-07-15
+### Fixed
+- Ssl.SslCaCertificateStores is no longer set when the parameter is empty, so SSL connections work on Linux agents. The property is Windows-only in librdkafka.
+
 ## [2.0.0] - 2024-05-14
 ### Added
 - Support for Confluent Schema Registry based Avro.
