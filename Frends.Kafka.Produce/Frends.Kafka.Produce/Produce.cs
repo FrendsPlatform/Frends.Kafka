@@ -309,7 +309,8 @@ public class Kafka
             config.EnableSslCertificateVerification = ssl.EnableSslCertificateVerification;
             config.SslCertificateLocation = AssignIfNotNullOrEmpty(ssl.SslCertificateLocation, string.Empty);
             config.SslCertificatePem = AssignIfNotNullOrEmpty(ssl.SslCertificatePem, string.Empty);
-            config.SslCaCertificateStores = AssignIfNotNullOrEmpty(ssl.SslCaCertificateStores, "Root");
+            if (!string.IsNullOrEmpty(ssl.SslCaCertificateStores))
+                config.SslCaCertificateStores = ssl.SslCaCertificateStores;
             config.SslCaLocation = AssignIfNotNullOrEmpty(ssl.SslCaLocation, string.Empty);
             config.SslCaPem = AssignIfNotNullOrEmpty(ssl.SslCaPem, string.Empty);
             config.SslKeyLocation = AssignIfNotNullOrEmpty(ssl.SslKeyLocation, string.Empty);
