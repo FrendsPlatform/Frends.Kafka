@@ -41,8 +41,6 @@ public static class Kafka
     {
         try
         {
-            ValidationHandler.Run(input, connection, options);
-
             var producerConfig = GetProducerConfig(input, options, connection.Socket, connection.Sasl, connection.Ssl);
             if (connection.SchemaRegistry.UseSchemaRegistry)
                 return await ProduceAvro(input.Topic, input.Key, input.Partition, connection.SchemaRegistry, producerConfig, cancellationToken);
@@ -427,4 +425,4 @@ public static class Kafka
             _ => throw new ArgumentException($"GetSaslMechanism exception: Value '{saslMechanisms}' not supported."),
         };
     }
-}
+}

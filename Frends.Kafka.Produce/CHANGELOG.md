@@ -2,7 +2,7 @@
 ## [3.0.0] - 2026-10-27
 ### Changed
 - **[Breaking Change]** Socket, Sasl, Ssl and SchemaRegistry parameters are now properties of the new Connection parameter. The Task now has the parameters Input, Connection and Options.
-- **[Breaking Change]** Task now targets .NET 8.
+- Task now targets .NET 8.
 ### Added
 - Options.ThrowErrorOnFailure and Options.ErrorMessageOnFailure for controlling error handling. When ThrowErrorOnFailure is false, failures are returned in Result.Error.
 - Result.Error property containing the error message and additional information.
