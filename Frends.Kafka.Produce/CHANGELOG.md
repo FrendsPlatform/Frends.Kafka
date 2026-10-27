@@ -1,4 +1,14 @@
 # Changelog
+## [3.0.0] - 2026-10-27
+### Changed
+- **[Breaking Change]** Socket, Sasl, Ssl and SchemaRegistry parameters are now properties of the new Connection parameter. The Task now has the parameters Input, Connection and Options.
+- **[Breaking Change]** Task now targets .NET 8.
+### Added
+- Options.ThrowErrorOnFailure and Options.ErrorMessageOnFailure for controlling error handling. When ThrowErrorOnFailure is false, failures are returned in Result.Error.
+- Result.Error property containing the error message and additional information.
+### Fixed
+- Added missing documentation example for Options.MessageSendMaxRetries.
+
 ## [2.1.0] - 2026-07-15
 ### Fixed
 - Ssl.SslCaCertificateStores is no longer set when the parameter is empty, so SSL connections work on Linux agents. The property is Windows-only in librdkafka.

@@ -22,7 +22,7 @@ public class Socket
     public bool SocketNagleDisable { get; set; }
 
     /// <summary>
-    /// Default timeout for network requests. 
+    /// Default timeout for network requests.
     /// ProduceRequests will use the lesser value of Socket.SocketTimeoutMs and remaining Options.MessageTimeoutMs for the first message in the batch.
     /// </summary>
     /// <example>60000</example>
@@ -38,9 +38,9 @@ public class Socket
     public int SocketConnectionSetupTimeoutMs { get; set; } = 30000;
 
     /// <summary>
-    /// Disconnect from broker when this number of Produce failures (e.g., timed out requests) is reached. 
-    /// Disable with 0. 
-    /// WARNING: It is highly recommended to leave this setting at its default value of 1 to avoid the client and broker to become desynchronized in case of request timeouts. 
+    /// Disconnect from broker when this number of Produce failures (e.g., timed out requests) is reached.
+    /// Disable with 0.
+    /// WARNING: It is highly recommended to leave this setting at its default value of 1 to avoid the client and broker to become desynchronized in case of request timeouts.
     /// NOTE: The connection is automatically re-established.
     /// </summary>
     /// <example>1</example>
@@ -48,7 +48,7 @@ public class Socket
     public int SocketMaxFails { get; set; }
 
     /// <summary>
-    /// Broker socket receive buffer size. 
+    /// Broker socket receive buffer size.
     /// 0 = System default.
     /// </summary>
     /// <example>0</example>

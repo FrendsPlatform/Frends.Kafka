@@ -1,14 +1,14 @@
+﻿using System.Text;
+using Avro;
 using Avro.Generic;
 using Confluent.Kafka;
 using Confluent.Kafka.SyncOverAsync;
 using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using Frends.Kafka.Produce.Definitions;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
-using System.Text;
-using Avro;
-using Newtonsoft.Json.Linq;
 using Schema = Avro.Schema;
 
 namespace Frends.Kafka.Produce.Tests;
@@ -27,43 +27,43 @@ public class UnitTests
             Use Host = localhost:9092 and UseSasl = false
     */
 
-    private readonly string _message = $"Hello {DateTime.Now}";
-    private readonly string _topic = "ProduceBasicTestTopic";
-    private readonly string? _bootstrapServers = Environment.GetEnvironmentVariable("ConfluentKafka_BootstrapServers");
-    private readonly string? _apiKey = Environment.GetEnvironmentVariable("ConfluentKafka_APIKey");
-    private readonly string? _apiKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_APIKeySecret");
+    private readonly string message = $"Hello {DateTime.Now}";
+    private readonly string topic = "ProduceBasicTestTopic";
+    private readonly string bootstrapServers = Environment.GetEnvironmentVariable("ConfluentKafka_BootstrapServers");
+    private readonly string apiKey = Environment.GetEnvironmentVariable("ConfluentKafka_APIKey");
+    private readonly string apiKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_APIKeySecret");
 
-    private readonly string? _schemaRegistryURL =
+    private readonly string schemaRegistryURL =
         Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryURL");
 
-    private readonly string? _schemaRegistryAPIKey =
+    private readonly string schemaRegistryAPIKey =
         Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKey");
 
-    private readonly string? _schemaRegistryAPIKeySecret =
+    private readonly string schemaRegistryAPIKeySecret =
         Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKeySecret");
 
-    private Input _input = new();
-    private Options _options = new();
-    private Sasl _sasl = new();
-    private Socket _socket = new();
-    private Ssl _ssl = new();
-    private SchemaRegistry _schemaRegistry = new();
+    private Input input = new();
+    private Options options = new();
+    private Sasl sasl = new();
+    private Socket socket = new();
+    private Ssl ssl = new();
+    private SchemaRegistry schemaRegistry = new();
 
     [SetUp]
     public void Init()
     {
-        _input = new Input()
+        input = new Input()
         {
-            Message = _message,
-            Host = _bootstrapServers,
-            Topic = _topic,
+            Message = message,
+            Host = bootstrapServers,
+            Topic = topic,
             CompressionType = CompressionTypes.None,
             Key = null,
             Partition = -1,
-            SecurityProtocol = SecurityProtocols.SaslSsl
+            SecurityProtocol = SecurityProtocols.SaslSsl,
         };
 
-        _options = new Options()
+        options = new Options()
         {
             MessageTimeoutMs = 20000,
             Acks = Ack.None,
@@ -77,14 +77,14 @@ public class UnitTests
             QueueBufferingMaxMessages = 100000,
             TransactionalId = null,
             TransactionTimeoutMs = 60000,
-            Debug = "all"
+            Debug = "all",
         };
 
-        _schemaRegistry = new SchemaRegistry()
+        schemaRegistry = new SchemaRegistry()
         {
             UseSchemaRegistry = false,
             BasicAuthCredentialsSource = AuthCredentialsSources.UserInfo,
-            BasicAuthUserInfo = $"{_schemaRegistryAPIKey}:{_schemaRegistryAPIKeySecret}",
+            BasicAuthUserInfo = $"{schemaRegistryAPIKey}:{schemaRegistryAPIKeySecret}",
             EnableSslCertificateVerification = false,
             MaxCachedSchemas = 1000,
             Records = @"{
@@ -204,32 +204,32 @@ public class UnitTests
   ""type"": ""record""
 }",
             RequestTimeoutMs = 30000,
-            SchemaRegistryUrl = _schemaRegistryURL,
+            SchemaRegistryUrl = schemaRegistryURL,
             SslCaLocation = null,
             SslKeystoreLocation = null,
             SslKeystorePassword = null,
         };
 
-        _socket = new Socket()
+        socket = new Socket()
         {
             SocketTimeoutMs = 60000,
             SocketConnectionSetupTimeoutMs = 30000,
             SocketKeepaliveEnable = false,
             SocketMaxFails = 1,
             SocketNagleDisable = false,
-            SocketReceiveBufferBytes = 0
+            SocketReceiveBufferBytes = 0,
         };
 
         // SASL is required for cloud tests.
-        _sasl = new Sasl()
+        sasl = new Sasl()
         {
             UseSasl = true,
             SaslMechanism = SaslMechanisms.Plain,
-            SaslUsername = _apiKey,
-            SaslPassword = _apiKeySecret,
+            SaslUsername = apiKey,
+            SaslPassword = apiKeySecret,
         };
 
-        _ssl = new Ssl()
+        ssl = new Ssl()
         {
             UseSsl = false,
             SslEndpointIdentificationAlgorithm = SslEndpointIdentificationAlgorithms.None,
@@ -255,18 +255,18 @@ public class UnitTests
     [TearDown]
     public void Cleanup()
     {
-        //For manual cleaning up. Run until ConsumeBasic() returns nothing for ~10 seconds.
-        //while (true)
+        // For manual cleaning up. Run until ConsumeBasic() returns nothing for ~10 seconds.
+        // while (true)
         //    ConsumeBasic();
     }
 
     [Test]
     public async Task Kafka_Produce_Default_Test()
     {
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = await Kafka.Produce(input, BuildConnection(), options, default);
         ClassicAssert.That(result.Success);
         ClassicAssert.IsNotNull(result.Data);
-        ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+        ClassicAssert.AreEqual(input.Message, ConsumeBasic().Message.Value);
     }
 
     [Test]
@@ -275,27 +275,27 @@ public class UnitTests
         var values = new[]
         {
             CompressionTypes.Gzip, CompressionTypes.Lz4, CompressionTypes.None, CompressionTypes.Snappy,
-            CompressionTypes.Zstd
+            CompressionTypes.Zstd,
         };
 
         foreach (var item in values)
         {
-            _input.CompressionType = item;
-            var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            input.CompressionType = item;
+            var result = await Kafka.Produce(input, BuildConnection(), options, default);
             ClassicAssert.That(result.Success);
             ClassicAssert.IsNotNull(result.Data);
-            ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+            ClassicAssert.AreEqual(input.Message, ConsumeBasic().Message.Value);
         }
     }
 
     [Test]
     public async Task Kafka_Produce_Empty_Message()
     {
-        _input.Message = null;
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        input.Message = null;
+        var result = await Kafka.Produce(input, BuildConnection(), options, default);
         ClassicAssert.IsTrue(result.Success);
         ClassicAssert.IsNotNull(result.Data);
-        ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+        ClassicAssert.AreEqual(input.Message, ConsumeBasic().Message.Value);
     }
 
     [Test]
@@ -305,61 +305,61 @@ public class UnitTests
 
         foreach (var item in values)
         {
-            _input.Partition = item;
-            var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            input.Partition = item;
+            var result = await Kafka.Produce(input, BuildConnection(), options, default);
             ClassicAssert.That(result.Success);
             ClassicAssert.IsNotNull(result.Data);
-            ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+            ClassicAssert.AreEqual(input.Message, ConsumeBasic().Message.Value);
         }
     }
 
     [Test]
     public async Task Kafka_Produce_Partition_Key()
     {
-        _input.Key = "SomeKey";
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        input.Key = "SomeKey";
+        var result = await Kafka.Produce(input, BuildConnection(), options, default);
         ClassicAssert.IsTrue(result.Success);
         ClassicAssert.IsNotNull(result.Data);
-        ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+        ClassicAssert.AreEqual(input.Message, ConsumeBasic().Message.Value);
     }
 
     [Test]
     [Ignore("Can't test with cloud.")]
     public async Task Kafka_Produce_SecurityProtocols_Plaintext_Test()
     {
-        _input.SecurityProtocol = SecurityProtocols.Plaintext;
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        input.SecurityProtocol = SecurityProtocols.Plaintext;
+        var result = await Kafka.Produce(input, BuildConnection(), options, default);
         ClassicAssert.That(result.Success);
         ClassicAssert.IsNotNull(result.Data);
-        ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+        ClassicAssert.AreEqual(input.Message, ConsumeBasic().Message.Value);
     }
 
     [Test]
     [Ignore("Can't test with cloud.")]
     public async Task Kafka_Produce_SecurityProtocols_SSL_Test()
     {
-        _input.SecurityProtocol = SecurityProtocols.Ssl;
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        input.SecurityProtocol = SecurityProtocols.Ssl;
+        var result = await Kafka.Produce(input, BuildConnection(), options, default);
         ClassicAssert.That(result.Success);
         ClassicAssert.IsNotNull(result.Data);
-        ClassicAssert.AreEqual(_input.Message, ConsumeBasic().Message.Value);
+        ClassicAssert.AreEqual(input.Message, ConsumeBasic().Message.Value);
     }
 
     [Test]
     public void Kafka_ErrorHandling_Test()
     {
-        _options.MessageTimeoutMs = 1;
+        options.MessageTimeoutMs = 1;
         var ex = ClassicAssert.ThrowsAsync<InvalidOperationException>(() =>
-            Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+            Kafka.Produce(input, BuildConnection(), options, default));
     }
 
     [Test]
     public async Task Kafka_Produce_Avro_Valid()
     {
-        _input.Topic = "ProduceAvroTestTopic";
-        _schemaRegistry.UseSchemaRegistry = true;
+        input.Topic = "ProduceAvroTestTopic";
+        schemaRegistry.UseSchemaRegistry = true;
 
-        var result = await Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = await Kafka.Produce(input, BuildConnection(), options, default);
         ClassicAssert.IsTrue(result.Success);
         ClassicAssert.IsNotNull(result.Data);
 
@@ -372,7 +372,8 @@ public class UnitTests
         ClassicAssert.AreEqual("Hello, World!", consumedRecord["stringField"]);
         ClassicAssert.AreEqual(null, consumedRecord["nullField"]);
         ClassicAssert.AreEqual("RED", ((GenericEnum)consumedRecord["enumField"]).Value);
-        CollectionAssert.AreEqual(new List<string> { "item1", "item2", "item3" },
+        CollectionAssert.AreEqual(
+            new List<string> { "item1", "item2", "item3" },
             ((object[])consumedRecord["arrayField"]).Cast<string>().ToList());
         ClassicAssert.AreEqual("Hello, Union!", consumedRecord["unionField"]);
         ClassicAssert.AreEqual("Hello, Nested!", ((GenericRecord)consumedRecord["recordField"])["nestedField"]);
@@ -388,7 +389,8 @@ public class UnitTests
 
         var expectedMap = new Dictionary<string, int> { { "key1", 1 }, { "key2", 2 }, { "key3", 3 } };
         var actualMap =
-            ((Dictionary<string, object>)consumedRecord["mapField"]).ToDictionary(kvp => kvp.Key,
+            ((Dictionary<string, object>)consumedRecord["mapField"]).ToDictionary(
+                kvp => kvp.Key,
                 kvp => Convert.ToInt32(kvp.Value));
         CollectionAssert.AreEqual(expectedMap, actualMap);
     }
@@ -396,10 +398,10 @@ public class UnitTests
     [Test]
     public void Kafka_Produce_Avro_InValid_intFieldShouldNotBeString()
     {
-        _input.Topic = "TaskTestSchemaTopic";
+        input.Topic = "TaskTestSchemaTopic";
 
-        _schemaRegistry.UseSchemaRegistry = true;
-        _schemaRegistry.Records = @"{
+        schemaRegistry.UseSchemaRegistry = true;
+        schemaRegistry.Records = @"{
   ""intField"": ""asd"",
   ""longField"": 1234567890,
   ""floatField"": 1.23,
@@ -422,7 +424,7 @@ public class UnitTests
   }
 }
 ";
-        _schemaRegistry.SchemaJson = @"{
+        schemaRegistry.SchemaJson = @"{
   ""fields"": [
     {
       ""name"": ""intField"",
@@ -516,7 +518,7 @@ public class UnitTests
   ""type"": ""record""
 }";
         ClassicAssert.ThrowsAsync<FormatException>(() =>
-            Kafka.Produce(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+            Kafka.Produce(input, BuildConnection(), options, default));
     }
 
     [Test]
@@ -565,29 +567,29 @@ public class UnitTests
     [Test]
     public void GetProducerConfig()
     {
-        var result = Kafka.GetProducerConfig(_input, _options, _socket, _sasl, _ssl);
-        ClassicAssert.AreEqual(_input.Host, result.BootstrapServers);
+        var result = Kafka.GetProducerConfig(input, options, socket, sasl, ssl);
+        ClassicAssert.AreEqual(input.Host, result.BootstrapServers);
         ClassicAssert.AreEqual(SecurityProtocol.SaslSsl, result.SecurityProtocol);
-        ClassicAssert.AreEqual(_sasl.SaslUsername, result.SaslUsername);
-        ClassicAssert.AreEqual(_sasl.SaslPassword, result.SaslPassword);
+        ClassicAssert.AreEqual(sasl.SaslUsername, result.SaslUsername);
+        ClassicAssert.AreEqual(sasl.SaslPassword, result.SaslPassword);
         ClassicAssert.AreEqual(SaslMechanism.Plain, result.SaslMechanism);
 
         // Debug
-        _options.Debug = "all";
-        result = Kafka.GetProducerConfig(_input, _options, _socket, _sasl, _ssl);
+        options.Debug = "all";
+        result = Kafka.GetProducerConfig(input, options, socket, sasl, ssl);
         ClassicAssert.AreEqual("all", result.Debug);
 
         // Sasl
-        _sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
-        _sasl.SaslOauthbearerClientId = "client-id";
-        result = Kafka.GetProducerConfig(_input, _options, _socket, _sasl, _ssl);
+        sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
+        sasl.SaslOauthbearerClientId = "client-id";
+        result = Kafka.GetProducerConfig(input, options, socket, sasl, ssl);
         ClassicAssert.AreEqual(SaslOauthbearerMethod.Oidc, result.SaslOauthbearerMethod);
-        ClassicAssert.AreEqual(_sasl.SaslOauthbearerClientId, result.SaslOauthbearerClientId);
+        ClassicAssert.AreEqual(sasl.SaslOauthbearerClientId, result.SaslOauthbearerClientId);
 
         // UseSsl
-        _ssl.UseSsl = true;
-        _ssl.SslKeyPassword = "cert123";
-        result = Kafka.GetProducerConfig(_input, _options, _socket, _sasl, _ssl);
+        ssl.UseSsl = true;
+        ssl.SslKeyPassword = "cert123";
+        result = Kafka.GetProducerConfig(input, options, socket, sasl, ssl);
         ClassicAssert.AreEqual(true, result.EnableSslCertificateVerification);
         ClassicAssert.AreEqual("cert123", result.SslKeyPassword);
     }
@@ -595,7 +597,7 @@ public class UnitTests
     private ConsumeResult<string, string> ConsumeBasic()
     {
         using var consumer = new ConsumerBuilder<string, string>(GetConsumeConfig()).Build();
-        consumer.Subscribe(_input.Topic);
+        consumer.Subscribe(input.Topic);
         var cr = consumer.Consume();
         consumer.Close();
         return cr;
@@ -605,10 +607,10 @@ public class UnitTests
     {
         var schemaRegistryConfig = new SchemaRegistryConfig()
         {
-            Url = _schemaRegistry.SchemaRegistryUrl,
-            BasicAuthCredentialsSource = (AuthCredentialsSource?)_schemaRegistry.BasicAuthCredentialsSource,
-            EnableSslCertificateVerification = _schemaRegistry.EnableSslCertificateVerification,
-            BasicAuthUserInfo = _schemaRegistry.BasicAuthUserInfo,
+            Url = schemaRegistry.SchemaRegistryUrl,
+            BasicAuthCredentialsSource = (AuthCredentialsSource?)schemaRegistry.BasicAuthCredentialsSource,
+            EnableSslCertificateVerification = schemaRegistry.EnableSslCertificateVerification,
+            BasicAuthUserInfo = schemaRegistry.BasicAuthUserInfo,
         };
 
         using var cachedSchemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryConfig);
@@ -616,7 +618,8 @@ public class UnitTests
             .SetValueDeserializer(new AvroDeserializer<GenericRecord>(cachedSchemaRegistryClient).AsSyncOverAsync())
             .Build();
         {
-            consumer.Subscribe(_input.Topic);
+            consumer.Subscribe(input.Topic);
+
             // consumes messages from the subscribed topic and prints them to the console
             var cr = consumer.Consume();
             var consumedRecord = cr.Message.Value;
@@ -631,11 +634,19 @@ public class UnitTests
         {
             GroupId = "csharp-group-1",
             AutoOffsetReset = AutoOffsetReset.Earliest,
-            SaslUsername = _apiKey,
-            SaslPassword = _apiKeySecret,
-            BootstrapServers = _bootstrapServers,
+            SaslUsername = apiKey,
+            SaslPassword = apiKeySecret,
+            BootstrapServers = bootstrapServers,
             SecurityProtocol = SecurityProtocol.SaslSsl,
-            SaslMechanism = SaslMechanism.Plain
+            SaslMechanism = SaslMechanism.Plain,
         };
     }
+
+    private Connection BuildConnection() => new()
+    {
+        Socket = socket,
+        Sasl = sasl,
+        Ssl = ssl,
+        SchemaRegistry = schemaRegistry,
+    };
 }
