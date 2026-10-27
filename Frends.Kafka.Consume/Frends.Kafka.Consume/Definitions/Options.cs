@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace Frends.Kafka.Consume.Definitions;
 
@@ -22,7 +23,7 @@ public class Options
     public Ack Acks { get; set; }
 
     /// <summary>
-    /// The frequency in milliseconds that the consumer offsets are committed (written) to offset storage. 
+    /// The frequency in milliseconds that the consumer offsets are committed (written) to offset storage.
     /// (0 = disable). This setting is used by the high-level consumer.
     /// </summary>
     /// <example>5000</example>
@@ -32,7 +33,7 @@ public class Options
     /// <summary>
     /// Action to take when there is no initial offset in offset store or the desired offset is out of range.
     /// </summary>
-    /// <example>AutoOffsetResets.</example>
+    /// <example>AutoOffsetResets.Latest</example>
     [DefaultValue(AutoOffsetResets.Latest)]
     public AutoOffsetResets AutoOffsetReset { get; set; }
 
@@ -52,8 +53,8 @@ public class Options
     public BrokerAddressFamilys BrokerAddressFamily { get; set; }
 
     /// <summary>
-    /// Close broker connections after the specified time of inactivity. 
-    /// Disable with 0. 
+    /// Close broker connections after the specified time of inactivity.
+    /// Disable with 0.
     /// If this property is left at its default value some heuristics are performed to determine a suitable default value, this is currently limited to identifying brokers on Azure.
     /// </summary>
     /// <example>0</example>
@@ -61,14 +62,14 @@ public class Options
     public int ConnectionsMaxIdleMs { get; set; }
 
     /// <summary>
-    /// Verify CRC32 of consumed messages, ensuring no on-the-wire or on-disk corruption to the messages occurred. 
+    /// Verify CRC32 of consumed messages, ensuring no on-the-wire or on-disk corruption to the messages occurred.
     /// </summary>
     /// <example>false</example>
     [DefaultValue(false)]
     public bool CheckCrcs { get; set; }
 
     /// <summary>
-    /// Automatically and periodically commit offsets in the background. 
+    /// Automatically and periodically commit offsets in the background.
     /// Note: setting this to false does not prevent the consumer from fetching previously committed start offsets.
     /// </summary>
     /// <example>true</example>
@@ -83,9 +84,9 @@ public class Options
     public int FetchErrorBackoffMs { get; set; }
 
     /// <summary>
-    /// Maximum amount of data the broker shall return for a Fetch request. 
+    /// Maximum amount of data the broker shall return for a Fetch request.
     /// Messages are fetched in batches by the consumer and if the first message batch in the first non-empty partition of the Fetch request is larger than this value, then the message batch will still be returned to ensure the consumer can make progress.
-    /// The maximum message batch size accepted by the broker is defined via `message.max.bytes` (broker config) or `max.message.bytes` (broker topic config). 
+    /// The maximum message batch size accepted by the broker is defined via `message.max.bytes` (broker config) or `max.message.bytes` (broker topic config).
     /// FetchMaxBytes is automatically adjusted upwards to be at least Options.MessageMaxBytes
     /// </summary>
     /// <example>52428800</example>
@@ -93,7 +94,7 @@ public class Options
     public int FetchMaxBytes { get; set; }
 
     /// <summary>
-    /// Minimum number of bytes the broker responds with. 
+    /// Minimum number of bytes the broker responds with.
     /// If option.FetchWaitMaxMs expires the accumulated data will be sent to the client regardless of this setting.
     /// </summary>
     /// <example>1</example>
@@ -108,15 +109,15 @@ public class Options
     public int FetchWaitMaxMs { get; set; }
 
     /// <summary>
-    /// Client group id string. 
+    /// Client group id string.
     /// All clients sharing the same Options.GroupId belong to the same group.
     /// </summary>
     /// <example>csharp-group-1</example>
     public string GroupId { get; set; }
 
     /// <summary>
-    /// Enable static group membership. 
-    /// Static group members are able to leave and rejoin a group within the configured Options.SessionTimeoutMs without prompting a group rebalance. 
+    /// Enable static group membership.
+    /// Static group members are able to leave and rejoin a group within the configured Options.SessionTimeoutMs without prompting a group rebalance.
     /// This should be used in combination with a larger Options.SessionTimeoutMs to avoid group rebalances caused by transient unavailability (e.g. process restarts).
     /// Requires broker version >= 2.3.0.
     /// </summary>
@@ -138,7 +139,7 @@ public class Options
     public IsolationLevels IsolationLevel { get; set; }
 
     /// <summary>
-    ///  Maximum Kafka protocol request message size. 
+    ///  Maximum Kafka protocol request message size.
     ///  Due to differing framing overhead between protocol versions the producer is unable to reliably enforce a strict max message limit at produce time and may exceed the maximum size by one message in protocol ProduceRequests, the broker will enforce the the topic's Options.MessageMaxBytes limit (see Apache Kafka documentation)
     /// </summary>
     /// <example>1000000</example>
@@ -146,8 +147,8 @@ public class Options
     public int MessageMaxBytes { get; set; }
 
     /// <summary>
-    /// Maximum number of in-flight requests per broker connection. 
-    /// This is a generic property applied to all broker communication, however it is primarily relevant to produce requests. 
+    /// Maximum number of in-flight requests per broker connection.
+    /// This is a generic property applied to all broker communication, however it is primarily relevant to produce requests.
     /// In particular, note that other mechanisms limit the number of outstanding consumer fetch request per broker to one.
     /// </summary>
     /// <example>1000000</example>
@@ -155,11 +156,11 @@ public class Options
     public int MaxInFlight { get; set; }
 
     /// <summary>
-    /// Maximum allowed time between calls to consume messages for high-level consumers. 
-    /// If this interval is exceeded the consumer is considered failed and the group will rebalance in order to reassign the partitions to another consumer group member. 
+    /// Maximum allowed time between calls to consume messages for high-level consumers.
+    /// If this interval is exceeded the consumer is considered failed and the group will rebalance in order to reassign the partitions to another consumer group member.
     /// Warning: Offset commits may be not possible at this point.
     /// Options.MaxPollIntervalMs must be >= Options.SessionTimeoutMs.
-    /// The interval is checked two times per second. 
+    /// The interval is checked two times per second.
     /// </summary>
     /// <example>300000</example>
     [DefaultValue(300000)]
@@ -167,9 +168,9 @@ public class Options
 
     /// <summary>
     /// Maximum number of kilobytes of queued pre-fetched messages in the local consumer queue.
-    /// If using the high-level consumer this setting applies to the single consumer queue, regardless of the number of partitions. 
+    /// If using the high-level consumer this setting applies to the single consumer queue, regardless of the number of partitions.
     /// When using the legacy simple consumer or when separate partition queues are used this setting applies per partition.
-    /// This value may be overshot by Options.FetchMaxBytes. 
+    /// This value may be overshot by Options.FetchMaxBytes.
     /// This property has higher priority than Options.QueuedMinMessages.
     /// </summary>
     /// <example>65536</example>
@@ -192,8 +193,8 @@ public class Options
 
     /// <summary>
     /// The initial time to wait before reconnecting to a broker after the connection has been closed.
-    /// The time is increased exponentially until Options.ReconnectBackoffMaxMs is reached. 
-    /// -25% to +50% jitter is applied to each reconnect backoff. 
+    /// The time is increased exponentially until Options.ReconnectBackoffMaxMs is reached.
+    /// -25% to +50% jitter is applied to each reconnect backoff.
     /// A value of 0 disables the backoff and reconnects immediately.
     /// </summary>
     /// <example>100</example>
@@ -201,9 +202,9 @@ public class Options
     public int ReconnectBackoffMs { get; set; }
 
     /// <summary>
-    /// Client group session and failure detection timeout. 
+    /// Client group session and failure detection timeout.
     /// The consumer sends periodic heartbeats (Options.HeartbeatIntervalMs) to indicate its liveness to the broker.
-    /// If no hearts are received by the broker for a group member within the session timeout, the broker will remove the consumer from the group and trigger a rebalance. 
+    /// If no hearts are received by the broker for a group member within the session timeout, the broker will remove the consumer from the group and trigger a rebalance.
     /// Options.MaxPollIntervalMs must be >= Options.SessionTimeoutMs.
     /// </summary>
     /// <example>45000</example>
@@ -211,9 +212,24 @@ public class Options
     public int SessionTimeoutMs { get; set; }
 
     /// <summary>
-    /// A comma-separated list of debug contexts to enable. 
+    /// A comma-separated list of debug contexts to enable.
     /// Detailed Consumer debugging: consumer,cgrp,topic,fetch.
     /// </summary>
     /// <example>broker</example>
     public string Debug { get; set; }
+
+    /// <summary>
+    /// Whether to throw an error on failure.
+    /// </summary>
+    /// <example>true</example>
+    [DefaultValue(true)]
+    public bool ThrowErrorOnFailure { get; set; } = true;
+
+    /// <summary>
+    /// Overrides the error message on failure.
+    /// </summary>
+    /// <example>Failed to consume messages from Kafka</example>
+    [DisplayFormat(DataFormatString = "Text")]
+    [DefaultValue("")]
+    public string ErrorMessageOnFailure { get; set; } = string.Empty;
 }

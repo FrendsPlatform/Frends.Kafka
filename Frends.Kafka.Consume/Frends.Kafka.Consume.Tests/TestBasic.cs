@@ -20,37 +20,36 @@ public class TestBasic
         docker exec --interactive --tty "container's name" kafka-console-consumer --bootstrap-server localhost:9092 --topic ConsumeTopic --from-beginning
     */
 
+    private readonly string message = $"Hello {DateTime.Now}";
+    private readonly string topic = "ConsumeBasicTopic";
+    private readonly string? bootstrapServers = Environment.GetEnvironmentVariable("ConfluentKafka_BootstrapServers");
+    private readonly string? apiKey = Environment.GetEnvironmentVariable("ConfluentKafka_APIKey");
+    private readonly string? apiKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_APIKeySecret");
+    private readonly string? schemaRegistryURL = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryURL");
+    private readonly string? schemaRegistryAPIKey = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKey");
+    private readonly string? schemaRegistryAPIKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKeySecret");
 
-    private readonly string _message = $"Hello {DateTime.Now}";
-    private readonly string _topic = "ConsumeBasicTopic";
-    private readonly string? _bootstrapServers = Environment.GetEnvironmentVariable("ConfluentKafka_BootstrapServers");
-    private readonly string? _apiKey = Environment.GetEnvironmentVariable("ConfluentKafka_APIKey");
-    private readonly string? _apiKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_APIKeySecret");
-    private readonly string? _schemaRegistryURL = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryURL");
-    private readonly string? _schemaRegistryAPIKey = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKey");
-    private readonly string? _schemaRegistryAPIKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKeySecret");
-
-    private Input _input = new();
-    private Options _options = new();
-    private Sasl _sasl = new();
-    private Socket _socket = new();
-    private Ssl _ssl = new();
-    private SchemaRegistry _schemaRegistry = new();
+    private Input input = new();
+    private Options options = new();
+    private Sasl sasl = new();
+    private Socket socket = new();
+    private Ssl ssl = new();
+    private SchemaRegistry schemaRegistry = new();
 
     [SetUp]
     public async Task Setup()
     {
-        _input = new Input()
+        input = new Input()
         {
-            Host = _bootstrapServers,
-            Topic = _topic,
+            Host = bootstrapServers,
+            Topic = topic,
             SecurityProtocol = SecurityProtocols.SaslSsl,
             MessageCount = 10,
             Timeout = 10000,
             Partition = -1,
         };
 
-        _options = new Options()
+        options = new Options()
         {
             Acks = Ack.None,
             MaxInFlight = 1000000,
@@ -80,7 +79,7 @@ public class TestBasic
             EncodeMessageKey = true,
         };
 
-        _socket = new Socket()
+        socket = new Socket()
         {
             SocketConnectionSetupTimeoutMs = 30000,
             SocketKeepaliveEnable = false,
@@ -90,20 +89,20 @@ public class TestBasic
             SocketTimeoutMs = 10000,
         };
 
-        _schemaRegistry = new SchemaRegistry()
+        schemaRegistry = new SchemaRegistry()
         {
             UseSchemaRegistry = false,
             BasicAuthCredentialsSource = AuthCredentialsSources.UserInfo,
-            BasicAuthUserInfo = $"{_schemaRegistryAPIKey}:{_schemaRegistryAPIKeySecret}",
+            BasicAuthUserInfo = $"{schemaRegistryAPIKey}:{schemaRegistryAPIKeySecret}",
             MaxCachedSchemas = 1000,
             RequestTimeoutMs = 30000,
-            SchemaRegistryUrl = _schemaRegistryURL,
+            SchemaRegistryUrl = schemaRegistryURL,
             SslCaLocation = null,
             SslKeystoreLocation = null,
             SslKeystorePassword = null,
         };
 
-        _socket = new Socket()
+        socket = new Socket()
         {
             SocketTimeoutMs = 60000,
             SocketConnectionSetupTimeoutMs = 30000,
@@ -114,15 +113,15 @@ public class TestBasic
         };
 
         // SASL is required for cloud tests.
-        _sasl = new Sasl()
+        sasl = new Sasl()
         {
             UseSasl = true,
             SaslMechanism = SaslMechanisms.Plain,
-            SaslUsername = _apiKey,
-            SaslPassword = _apiKeySecret,
+            SaslUsername = apiKey,
+            SaslPassword = apiKeySecret,
         };
 
-        _ssl = new Ssl()
+        ssl = new Ssl()
         {
             UseSsl = false,
             SslEndpointIdentificationAlgorithm = SslEndpointIdentificationAlgorithms.None,
@@ -146,28 +145,27 @@ public class TestBasic
     }
 
     // In comments because this method can be used to manually clear the pool after debugging etc.
-    //[TearDown]
-    //public void Cleanup()
-    //{
+    // [TearDown]
+    // public void Cleanup()
+    // {
     //    //_schemaRegistry.UseSchemaRegistry = true;
     //    //while(true)
-    //    //    Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
-    //}
-
+    //    //    Kafka.Consume(_input, Conn(), _options, default);
+    // }
     [Test]
     public async Task Kafka_Consume_Basic_Test()
     {
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
     public void Kafka_Consume_Basic_InvalidTopic()
     {
-        _input.Topic = "invalidTopic";
-        var ex = ClassicAssert.Throws<ConsumeException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        input.Topic = "invalidTopic";
+        var ex = ClassicAssert.Throws<ConsumeException>(() => Kafka.Consume(input, Conn(), options, default));
         ClassicAssert.NotNull(ex);
         ClassicAssert.AreEqual("Subscribed topic not available: invalidTopic: Broker: Unknown topic or partition", ex?.Message);
     }
@@ -176,15 +174,15 @@ public class TestBasic
     public async Task Kafka_Consume_Basic_MessageCount_Random()
     {
         var rndCount = new Random().Next(1, 6);
-        _input.MessageCount = rndCount;
+        input.MessageCount = rndCount;
 
         for (int i = 0; i < rndCount; i++)
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
         ClassicAssert.AreEqual(rndCount, result.Data.Count);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
@@ -192,35 +190,36 @@ public class TestBasic
     public async Task Kafka_Consume_Basic_MessageCount_DontReadAll()
     {
         var rndCount = new Random().Next(1, 6);
-        _input.MessageCount = rndCount;
+        input.MessageCount = rndCount;
         var extras = new Random().Next(1, 3);
 
         for (int i = 0; i < rndCount + extras; i++)
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
         ClassicAssert.AreEqual(rndCount, result.Data.Count);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
 
-        var result2 = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result2 = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result2.Success);
         ClassicAssert.AreEqual(extras, result2.Data.Count);
-        ClassicAssert.IsTrue(result2.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result2.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_MessageCount_Unlimited()
     {
         var rndCount = new Random().Next(1, 6);
-        _input.MessageCount = 0;
+        input.MessageCount = 0;
 
         for (int i = 0; i < rndCount; i++)
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
+
         // We assert that we get at least the amount of messages we sent, because
         // we can't know how many messages are in the topic previously.
         ClassicAssert.IsTrue(result.Data.Count >= rndCount);
@@ -229,49 +228,49 @@ public class TestBasic
     [Test]
     public async Task Kafka_Consume_Basic_Timeout_Unlimited()
     {
-        _input.Timeout = 0;
+        input.Timeout = 0;
         var rndCount = new Random().Next(1, 6);
-        _input.MessageCount = rndCount;
+        input.MessageCount = rndCount;
 
         for (int i = 0; i < rndCount; i++)
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
         ClassicAssert.AreEqual(rndCount, result.Data.Count);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_SecurityProtocol_SaslSsl()
     {
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _input.SecurityProtocol = SecurityProtocols.SaslSsl;
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        input.SecurityProtocol = SecurityProtocols.SaslSsl;
 
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
-    /// This test won't fail but doesn't return anything either because cloud likes SaslSsl.
+    // This test won't fail but doesn't return anything either because cloud likes SaslSsl.
     [Test]
     public async Task Kafka_Consume_Basic_SecurityProtocol_Plaintext()
     {
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _input.SecurityProtocol = SecurityProtocols.Plaintext;
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        input.SecurityProtocol = SecurityProtocols.Plaintext;
 
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
     }
 
-    /// This test won't fail but doesn't return anything either because cloud likes SaslSsl.
+    // This test won't fail but doesn't return anything either because cloud likes SaslSsl.
     [Test]
     public async Task Kafka_Consume_Basic_SecurityProtocol_SSL()
     {
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _input.SecurityProtocol = SecurityProtocols.Ssl;
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        input.SecurityProtocol = SecurityProtocols.Ssl;
 
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
     }
 
@@ -282,12 +281,12 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
-            _input.Partition = item;
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            input.Partition = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
@@ -298,12 +297,12 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.Acks = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.Acks = item;
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
@@ -314,12 +313,12 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.AutoCommitIntervalMs = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.AutoCommitIntervalMs = item;
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
@@ -330,12 +329,12 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
-            _options.AutoOffsetReset = item;
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            options.AutoOffsetReset = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
@@ -346,14 +345,14 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.BrokerAddressFamily = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.BrokerAddressFamily = item;
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
 
             if (item != BrokerAddressFamilys.V6)
-                ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+                ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
@@ -364,10 +363,10 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.CheckCrcs = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.CheckCrcs = item;
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
         }
     }
@@ -379,9 +378,9 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
-            _options.ConnectionsMaxIdleMs = item;
+            options.ConnectionsMaxIdleMs = item;
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
         }
     }
@@ -393,13 +392,12 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.Debug = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.Debug = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
@@ -410,13 +408,12 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.EnableAutoCommit = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.EnableAutoCommit = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
@@ -427,13 +424,12 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.EnableAutoOffsetStore = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.EnableAutoOffsetStore = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
@@ -444,13 +440,12 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.EncodeMessageKey = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.EncodeMessageKey = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
@@ -461,140 +456,128 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.FetchErrorBackoffMs = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.FetchErrorBackoffMs = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_FetchMaxBytes()
     {
+        options.FetchMaxBytes = 52428800;
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        _options.FetchMaxBytes = 52428800;
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_FetchMaxBytes_0()
     {
+        options.FetchMaxBytes = 0;
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        _options.FetchMaxBytes = 0;
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-
-        var ex = ClassicAssert.Throws<InvalidOperationException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        var ex = ClassicAssert.Throws<InvalidOperationException>(() => Kafka.Consume(input, Conn(), options, default));
         ClassicAssert.AreEqual("`fetch.max.bytes` must be >= `message.max.bytes`", ex?.Message);
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_FetchMaxBytes_MessageMaxBytes_0()
     {
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        options.FetchMaxBytes = 0;
+        options.MessageMaxBytes = 0;
 
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _options.FetchMaxBytes = 0;
-        _options.MessageMaxBytes = 0;
-
-        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(input, Conn(), options, default));
         ClassicAssert.AreEqual("Configuration property \"message.max.bytes\" value 0 is outside allowed range 1000..1000000000\n", ex?.Message);
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_MaxInFlight()
     {
+        options.MaxInFlight = 1000000;
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        _options.MaxInFlight = 1000000;
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_MaxInFlight_0()
     {
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        options.MaxInFlight = 0;
 
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _options.MaxInFlight = 0;
-
-        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(input, Conn(), options, default));
         ClassicAssert.AreEqual("Configuration property \"max.in.flight.requests.per.connection\" value 0 is outside allowed range 1..1000000\n", ex?.Message);
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_QueuedMaxMessagesKbytes()
     {
+        options.QueuedMaxMessagesKbytes = 65536;
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        _options.QueuedMaxMessagesKbytes = 65536;
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_QueuedMaxMessagesKbytes_0()
     {
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        options.QueuedMaxMessagesKbytes = 0;
 
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _options.QueuedMaxMessagesKbytes = 0;
-
-        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(input, Conn(), options, default));
         ClassicAssert.AreEqual("Configuration property \"queued.max.messages.kbytes\" value 0 is outside allowed range 1..2097151\n", ex?.Message);
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_QueuedMinMessages()
     {
+        options.QueuedMinMessages = 65536;
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        _options.QueuedMinMessages = 65536;
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_QueuedMinMessages_0()
     {
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        options.QueuedMinMessages = 0;
 
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _options.QueuedMinMessages = 0;
-
-        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(input, Conn(), options, default));
         ClassicAssert.AreEqual("Configuration property \"queued.min.messages\" value 0 is outside allowed range 1..10000000\n", ex?.Message);
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_FetchMinBytes()
     {
+        options.FetchMinBytes = 1;
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        _options.FetchMinBytes = 1;
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_FetchMinBytes_0()
     {
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        options.FetchMinBytes = 0;
 
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _options.FetchMinBytes = 0;
-
-        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(input, Conn(), options, default));
         ClassicAssert.AreEqual("Configuration property \"fetch.min.bytes\" value 0 is outside allowed range 1..100000000\n", ex?.Message);
     }
 
@@ -605,23 +588,21 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.FetchWaitMaxMs = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.FetchWaitMaxMs = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
     [Test]
     public void Kafka_Consume_Basic_FetchWaitMaxMs_NoMessage()
     {
+        options.FetchWaitMaxMs = 500;
 
-        _options.FetchWaitMaxMs = 500;
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
         ClassicAssert.AreEqual(0, result.Data.Count);
     }
@@ -633,14 +614,14 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
-            _options.GroupId = item;
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            options.GroupId = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
 
             if (item == "csharp-group-1")
-                ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+                ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
@@ -651,33 +632,30 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.GroupInstanceId = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.GroupInstanceId = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
     [Test]
     public void Kafka_Consume_Basic_HeartbeatIntervalMs()
     {
+        options.HeartbeatIntervalMs = 3000;
 
-        _options.HeartbeatIntervalMs = 3000;
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
     }
 
     [Test]
     public void Kafka_Consume_Basic_HeartbeatIntervalMs_0()
     {
+        options.HeartbeatIntervalMs = 0;
 
-        _options.HeartbeatIntervalMs = 0;
-
-        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        var ex = ClassicAssert.Throws<ArgumentException>(() => Kafka.Consume(input, Conn(), options, default));
         ClassicAssert.AreEqual("Configuration property \"heartbeat.interval.ms\" value 0 is outside allowed range 1..3600000\n", ex?.Message);
     }
 
@@ -688,33 +666,30 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.IsolationLevel = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.IsolationLevel = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
     [Test]
     public void Kafka_Consume_Basic_ReconnectBackoffMaxMs()
     {
+        options.ReconnectBackoffMaxMs = 10000;
 
-        _options.ReconnectBackoffMaxMs = 10000;
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
     }
 
     [Test]
     public void Kafka_Consume_Basic_ReconnectBackoffMaxMs_0()
     {
+        options.ReconnectBackoffMaxMs = 0;
 
-        _options.ReconnectBackoffMaxMs = 0;
-
-        var ex = ClassicAssert.Throws<InvalidOperationException>(() => Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default));
+        var ex = ClassicAssert.Throws<InvalidOperationException>(() => Kafka.Consume(input, Conn(), options, default));
         ClassicAssert.AreEqual("`reconnect.backoff.max.ms` must be >= `reconnect.max.ms`", ex?.Message);
     }
 
@@ -725,36 +700,33 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            options.ReconnectBackoffMs = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _options.ReconnectBackoffMs = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_SaslMechanisms_Plain()
     {
+        sasl.SaslMechanism = SaslMechanisms.Plain;
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-        _sasl.SaslMechanism = SaslMechanisms.Plain;
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     // Can't be tested with real data.
     [Test]
     public void Kafka_Consume_Basic_SaslMechanisms_Gssapi()
     {
+        sasl.SaslMechanism = SaslMechanisms.Gssapi;
 
-        _sasl.SaslMechanism = SaslMechanisms.Gssapi;
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
     }
 
@@ -762,10 +734,9 @@ public class TestBasic
     [Test]
     public void Kafka_Consume_Basic_SaslMechanisms_ScramSha512()
     {
+        sasl.SaslMechanism = SaslMechanisms.ScramSha512;
 
-        _sasl.SaslMechanism = SaslMechanisms.ScramSha512;
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
     }
 
@@ -773,10 +744,9 @@ public class TestBasic
     [Test]
     public void Kafka_Consume_Basic_SaslMechanisms_ScramSha256()
     {
+        sasl.SaslMechanism = SaslMechanisms.ScramSha256;
 
-        _sasl.SaslMechanism = SaslMechanisms.ScramSha256;
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
     }
 
@@ -784,10 +754,9 @@ public class TestBasic
     [Test]
     public void Kafka_Consume_Basic_SaslMechanisms_OAuthBearer()
     {
+        sasl.SaslMechanism = SaslMechanisms.OAuthBearer;
 
-        _sasl.SaslMechanism = SaslMechanisms.OAuthBearer;
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
     }
 
@@ -795,10 +764,9 @@ public class TestBasic
     [Test]
     public void Kafka_Consume_Basic_SaslUsername_Invalid()
     {
+        sasl.SaslUsername = "foo";
 
-        _sasl.SaslUsername = "foo";
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
     }
 
@@ -806,10 +774,9 @@ public class TestBasic
     [Test]
     public void Kafka_Consume_Basic_SaslPassword_Invalid()
     {
+        sasl.SaslPassword = "foo";
 
-        _sasl.SaslPassword = "foo";
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
     }
 
@@ -820,54 +787,50 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            sasl.SaslOauthbearerMethod = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _sasl.SaslOauthbearerMethod = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_SaslOauthbearerClientId_Oidc()
     {
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
+        sasl.SaslOauthbearerClientId = "foo";
 
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
-        _sasl.SaslOauthbearerClientId = "foo";
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_SaslOauthbearerClientSecret_Oidc()
     {
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
+        sasl.SaslOauthbearerClientSecret = "foo";
 
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
-        _sasl.SaslOauthbearerClientSecret = "foo";
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_Oidc_Secret_ID_Null()
     {
+        await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+        sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
+        sasl.SaslOauthbearerClientSecret = null;
+        sasl.SaslOauthbearerClientId = null;
 
-        await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-        _sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
-        _sasl.SaslOauthbearerClientSecret = null;
-        _sasl.SaslOauthbearerClientId = null;
-
-        var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+        var result = Kafka.Consume(input, Conn(), options, default);
         ClassicAssert.IsTrue(result.Success);
-        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+        ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
     [Test]
@@ -877,14 +840,13 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
+            sasl.SaslOauthbearerTokenEndpointUrl = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
-            _sasl.SaslOauthbearerTokenEndpointUrl = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
@@ -895,14 +857,13 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
+            sasl.SaslOauthbearerExtensions = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
-            _sasl.SaslOauthbearerExtensions = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
@@ -913,14 +874,13 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
+            sasl.SaslOauthbearerScope = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
-            _sasl.SaslOauthbearerScope = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
@@ -931,65 +891,61 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
+            sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
+            sasl.SaslOauthbearerConfig = item;
 
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
-            _sasl.SaslOauthbearerMethod = SaslOauthbearerMethods.Oidc;
-            _sasl.SaslOauthbearerConfig = item;
-
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)), $"parameterLooper = {item}");
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)), $"parameterLooper = {item}");
         }
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_Socket_SocketKeepaliveEnable()
     {
-
         var parameterLooper = new[] { true, false };
 
         foreach (var item in parameterLooper)
         {
-            _socket.SocketKeepaliveEnable = item;
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            socket.SocketKeepaliveEnable = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success);
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_Socket_SocketNagleDisable()
     {
-
         var parameterLooper = new[] { true, false };
 
         foreach (var item in parameterLooper)
         {
-            _socket.SocketNagleDisable = item;
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            socket.SocketNagleDisable = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success);
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_Socket_SocketTimeoutMs()
     {
-
         var parameterLooper = new[] { 10, 60000 };
 
         foreach (var item in parameterLooper)
         {
-            _socket.SocketTimeoutMs = item;
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            socket.SocketTimeoutMs = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success);
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
@@ -1000,54 +956,54 @@ public class TestBasic
 
         foreach (var item in parameterLooper)
         {
-            _socket.SocketConnectionSetupTimeoutMs = item;
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            socket.SocketConnectionSetupTimeoutMs = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success);
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_Socket_SocketMaxFails()
     {
-
         var parameterLooper = new[] { 0, 1, 2 };
 
         foreach (var item in parameterLooper)
         {
-            _socket.SocketMaxFails = item;
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            socket.SocketMaxFails = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success);
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
     [Test]
     public async Task Kafka_Consume_Basic_Socket_SocketReceiveBufferBytes()
     {
-
         var parameterLooper = new[] { 0, 1, 2 };
 
         foreach (var item in parameterLooper)
         {
-            _socket.SocketReceiveBufferBytes = item;
-            await ProduceTestMessage(isBasic: true, msgKey: null, msg: _message, records: null, schema: null);
+            socket.SocketReceiveBufferBytes = item;
+            await ProduceTestMessage(isBasic: true, msgKey: null, msg: message, records: null, schema: null);
 
-            var result = Kafka.Consume(_input, _socket, _sasl, _ssl, _schemaRegistry, _options, default);
+            var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success);
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(_message)));
+            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
     private async Task ProduceTestMessage(bool isBasic, string? msgKey, string? msg, string? records, string? schema)
     {
         if (isBasic)
-            await MessageProducer.ProduceBasic(_input, _options, _socket, _sasl, _ssl, msgKey, msg, default);
+            await MessageProducer.ProduceBasic(input, options, socket, sasl, ssl, msgKey, msg, default);
         else
-            await MessageProducer.ProduceAvro(_input, _options, _socket, _sasl, _ssl, records, schema, msgKey, _schemaRegistry, default);
+            await MessageProducer.ProduceAvro(input, options, socket, sasl, ssl, records, schema, msgKey, schemaRegistry, default);
     }
+
+    private Connection Conn() => new() { Socket = socket, Sasl = sasl, Ssl = ssl, SchemaRegistry = schemaRegistry };
 }

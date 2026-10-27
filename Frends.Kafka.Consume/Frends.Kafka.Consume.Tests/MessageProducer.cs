@@ -1,4 +1,7 @@
-﻿using Avro;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Text;
+using Avro;
 using Avro.Generic;
 using Confluent.Kafka;
 using Confluent.SchemaRegistry;
@@ -6,9 +9,6 @@ using Confluent.SchemaRegistry.Serdes;
 using Frends.Kafka.Consume.Definitions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Text;
 
 // Ignoring null warnings because these methods are copied from Frends.Kafka.Producer and some refs might be unused. There will be exceptions if something is truly missing.
 #pragma warning disable CS8600,CS8603,CS8601,CS8604, CS8602
@@ -27,7 +27,7 @@ internal class MessageProducer
         Message<string, string> message = new()
         {
             Key = msgKey ?? null,
-            Value = msg
+            Value = msg,
         };
 
         if (topicPartition != null)
@@ -190,7 +190,6 @@ internal class MessageProducer
 
     private static object ConvertTokenToAvroType(JToken token, JTokenType type)
     {
-
         return type switch
         {
             JTokenType.Null => null,

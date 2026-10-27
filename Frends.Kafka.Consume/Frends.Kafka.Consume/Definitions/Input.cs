@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace Frends.Kafka.Consume.Definitions;
 
@@ -8,7 +8,7 @@ namespace Frends.Kafka.Consume.Definitions;
 public class Input
 {
     /// <summary>
-    /// Initial list of brokers as a CSV list of broker host or host:port. 
+    /// Initial list of brokers as a CSV list of broker host or host:port.
     /// </summary>
     /// <example>localhost:1234</example>
     public string Host { get; set; }
