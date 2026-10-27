@@ -1,10 +1,12 @@
 ﻿# Changelog
+
 ## [3.0.0] - 2026-10-27
 ### Changed
-- **[Breaking Change]** Task now targets .NET 8.
+- Task now targets .NET 8.
 - **[Breaking Change]** Socket, SASL, SSL and Schema Registry parameters are now grouped under a single Connection parameter.
-- **[Breaking Change]** Result now contains an Error property describing the failure when the Task does not throw.
+- Result now contains an Error property describing the failure when the Task does not throw.
 - Added Options.ThrowErrorOnFailure and Options.ErrorMessageOnFailure to control error handling.
+
 ## [2.0.0] - 2024-05-15
 ### Added
 - Support for Confluent Schema Registry based Avro.
