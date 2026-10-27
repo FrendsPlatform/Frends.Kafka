@@ -206,7 +206,7 @@ internal class MessageProducer
     {
         ProducerConfig config = new()
         {
-            Acks = GetAcks(options.Acks),
+            Acks = Confluent.Kafka.Acks.Leader,
             BootstrapServers = AssignIfNotNullOrEmpty(input.Host, string.Empty),
             MaxInFlight = options.MaxInFlight,
             MessageMaxBytes = options.MessageMaxBytes,
@@ -303,17 +303,6 @@ internal class MessageProducer
             SslEndpointIdentificationAlgorithms.None => SslEndpointIdentificationAlgorithm.None,
             SslEndpointIdentificationAlgorithms.Https => SslEndpointIdentificationAlgorithm.Https,
             _ => throw new ArgumentException($"GetSslEndpointIdentificationAlgorithm exception: Value '{sslEndpointIdentificationAlgorithms}' not supported."),
-        };
-    }
-
-    private static Acks GetAcks(Ack ack)
-    {
-        return ack switch
-        {
-            Ack.None => Acks.None,
-            Ack.Leader => Acks.Leader,
-            Ack.All => Acks.All,
-            _ => throw new ArgumentException($"GetAcks exception: Value {ack} not supported."),
         };
     }
 

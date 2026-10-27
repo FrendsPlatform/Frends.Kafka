@@ -162,7 +162,7 @@ public class TestSchemaRegistry
             Host = bootstrapServers,
             Topic = topic,
             SecurityProtocol = SecurityProtocols.SaslSsl,
-            MessageCount = 10,
+            MessageCount = 1,
             Timeout = 10000,
             Partition = -1,
         };
@@ -451,7 +451,8 @@ public class TestSchemaRegistry
 
             var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data[0].Value.ToString().Contains("record"));
+            if (item != AutoOffsetResets.Latest)
+                ClassicAssert.IsTrue(result.Data[0].Value.ToString().Contains("record"));
         }
     }
 

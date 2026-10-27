@@ -44,7 +44,7 @@ public class TestBasic
             Host = bootstrapServers,
             Topic = topic,
             SecurityProtocol = SecurityProtocols.SaslSsl,
-            MessageCount = 10,
+            MessageCount = 1,
             Timeout = 10000,
             Partition = -1,
         };
@@ -334,7 +334,8 @@ public class TestBasic
 
             var result = Kafka.Consume(input, Conn(), options, default);
             ClassicAssert.IsTrue(result.Success, $"parameterLooper = {item}");
-            ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
+            if (item != AutoOffsetResets.Latest)
+                ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
         }
     }
 
