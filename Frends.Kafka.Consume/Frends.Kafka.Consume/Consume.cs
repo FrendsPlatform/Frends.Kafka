@@ -83,6 +83,7 @@ public static class Kafka
             }
         }
 
+        consumer.Close();
         return new Result { Success = true, Data = result, Error = null };
     }
 
@@ -125,6 +126,7 @@ public static class Kafka
             }
         }
 
+        consumer.Close();
         return new Result { Success = true, Data = result, Error = null };
     }
 
