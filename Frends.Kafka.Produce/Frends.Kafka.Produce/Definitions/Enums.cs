@@ -5,12 +5,25 @@
 /// </summary>
 public enum SecurityProtocols
 {
-#pragma warning disable CS1591 // self explanatory
+    /// <summary>
+    /// Unencrypted communication without authentication.
+    /// </summary>
     Plaintext,
+
+    /// <summary>
+    /// Encrypted communication using SSL.
+    /// </summary>
     Ssl,
+
+    /// <summary>
+    /// SASL authentication over an unencrypted connection.
+    /// </summary>
     SaslPlaintext,
-    SaslSsl
-#pragma warning restore CS1591 // self explanatory
+
+    /// <summary>
+    /// SASL authentication over an SSL encrypted connection.
+    /// </summary>
+    SaslSsl,
 }
 
 /// <summary>
@@ -18,13 +31,30 @@ public enum SecurityProtocols
 /// </summary>
 public enum CompressionTypes
 {
-#pragma warning disable CS1591 // self explanatory
+    /// <summary>
+    /// No compression.
+    /// </summary>
     None,
+
+    /// <summary>
+    /// Gzip compression.
+    /// </summary>
     Gzip,
+
+    /// <summary>
+    /// Snappy compression.
+    /// </summary>
     Snappy,
+
+    /// <summary>
+    /// LZ4 compression.
+    /// </summary>
     Lz4,
-    Zstd
-#pragma warning restore CS1591 // self explanatory
+
+    /// <summary>
+    /// Zstandard compression.
+    /// </summary>
+    Zstd,
 }
 
 /// <summary>
@@ -45,7 +75,7 @@ public enum Ack
     /// <summary>
     /// Broker will block until message is committed by all in sync replicas (ISRs).
     /// </summary>
-    All
+    All,
 }
 
 /// <summary>
@@ -76,7 +106,7 @@ public enum Partitioners
     /// <summary>
     /// Java Producer compatible Murmur2 hash of key (NULL keys are randomly partitioned. This is functionally equivalent to the default partitioner in the Java Producer.)
     /// </summary>
-    Murmur2Random
+    Murmur2Random,
 }
 
 /// <summary>
@@ -84,13 +114,30 @@ public enum Partitioners
 /// </summary>
 public enum SaslMechanisms
 {
-#pragma warning disable CS1591 // self explanatory
+    /// <summary>
+    /// GSSAPI (Kerberos) mechanism.
+    /// </summary>
     Gssapi,
+
+    /// <summary>
+    /// Plain username and password mechanism.
+    /// </summary>
     Plain,
+
+    /// <summary>
+    /// SCRAM-SHA-256 mechanism.
+    /// </summary>
     ScramSha256,
+
+    /// <summary>
+    /// SCRAM-SHA-512 mechanism.
+    /// </summary>
     ScramSha512,
-    OAuthBearer
-#pragma warning restore CS1591 // self explanatory
+
+    /// <summary>
+    /// OAUTHBEARER mechanism.
+    /// </summary>
+    OAuthBearer,
 }
 
 /// <summary>
@@ -98,10 +145,15 @@ public enum SaslMechanisms
 /// </summary>
 public enum SaslOauthbearerMethods
 {
-#pragma warning disable CS1591 // self explanatory
+    /// <summary>
+    /// Default OAuth bearer method.
+    /// </summary>
     Default,
-    Oidc
-#pragma warning restore CS1591 // self explanatory
+
+    /// <summary>
+    /// OpenID Connect OAuth bearer method.
+    /// </summary>
+    Oidc,
 }
 
 /// <summary>
@@ -109,10 +161,15 @@ public enum SaslOauthbearerMethods
 /// </summary>
 public enum SslEndpointIdentificationAlgorithms
 {
-#pragma warning disable CS1591 // self explanatory
+    /// <summary>
+    /// Value is not set.
+    /// </summary>
     None,
-    Https
-#pragma warning restore CS1591 // self explanatory
+
+    /// <summary>
+    /// Server hostname is verified against the certificate using HTTPS rules.
+    /// </summary>
+    Https,
 }
 
 /// <summary>
@@ -124,8 +181,9 @@ public enum AuthCredentialsSources
     /// Credentials are specified via the `schema.registry.basic.auth.user.info` config property in the form username:password. If `schema.registry.basic.auth.user.info` is not set, authentication is disabled.
     /// </summary>
     UserInfo,
+
     /// <summary>
     /// Credentials are specified via the `sasl.username` and `sasl.password` configuration properties.
     /// </summary>
-    SaslInherit
+    SaslInherit,
 }

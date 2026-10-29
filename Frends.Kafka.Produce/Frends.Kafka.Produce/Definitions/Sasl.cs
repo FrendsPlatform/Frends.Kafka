@@ -39,10 +39,10 @@ public class Sasl
     public string SaslPassword { get; set; }
 
     /// <summary>
-    /// Set to "default" or "oidc" to control which login method to be used. 
-    /// If set to "oidc", the following properties must also be be specified: 
-    /// Sasl.SaslOauthbearerClientId, 
-    /// Sasl.SaslOauthbearerClientSecret, 
+    /// Set to "default" or "oidc" to control which login method to be used.
+    /// If set to "oidc", the following properties must also be be specified:
+    /// Sasl.SaslOauthbearerClientId,
+    /// Sasl.SaslOauthbearerClientSecret,
     /// Sasl.SaslOauthbearerTokenEndpointUrl.
     /// </summary>
     /// <example>SaslOauthbearerMethod.Default</example>
@@ -51,15 +51,15 @@ public class Sasl
     public SaslOauthbearerMethods SaslOauthbearerMethod { get; set; }
 
     /// <summary>
-    /// Public identifier for the application. 
-    /// Must be unique across all clients that the authorization server handles. 
+    /// Public identifier for the application.
+    /// Must be unique across all clients that the authorization server handles.
     /// </summary>
     /// <example>ExampleClient</example>
     [UIHint(nameof(SaslOauthbearerMethod), "", SaslOauthbearerMethods.Oidc)]
     public string SaslOauthbearerClientId { get; set; }
 
     /// <summary>
-    /// Client secret only known to the application and the authorization server. 
+    /// Client secret only known to the application and the authorization server.
     /// </summary>
     /// <example>ExampleSecret</example>
     [PasswordPropertyText]
@@ -74,7 +74,7 @@ public class Sasl
     public string SaslOauthbearerTokenEndpointUrl { get; set; }
 
     /// <summary>
-    /// Allow additional information to be provided to the broker. 
+    /// Allow additional information to be provided to the broker.
     /// Comma-separated list of key=value pairs. E.g., "supportFeatureX=true,organizationId=sales-emea".
     /// </summary>
     /// <example>supportFeatureX=true,organizationId=sales-emea</example>
@@ -104,7 +104,7 @@ public class Sasl
     public string SaslKerberosKeytab { get; set; }
 
     /// <summary>
-    /// Minimum time in milliseconds between key refresh attempts. 
+    /// Minimum time in milliseconds between key refresh attempts.
     /// Disable automatic key refresh by setting this property to 0.
     /// Only supported on Linux OS.
     /// </summary>

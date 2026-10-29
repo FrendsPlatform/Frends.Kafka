@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace Frends.Kafka.Produce.Definitions;
 
@@ -15,10 +16,10 @@ public class Options
     public Ack Acks { get; set; }
 
     /// <summary>
-    /// When set to true, the producer will ensure that messages are successfully produced exactly once and in the original produce order. 
+    /// When set to true, the producer will ensure that messages are successfully produced exactly once and in the original produce order.
     /// The following configuration properties are adjusted automatically (if not modified by the user) when idempotence is enabled:
-    /// Options.MaxInFlight=5 (must be less than or equal to 5), 
-    /// Options.MessageProduceMaxRetries=2147483647 (must be greater than 0), 
+    /// Options.MaxInFlight=5 (must be less than or equal to 5),
+    /// Options.MessageProduceMaxRetries=2147483647 (must be greater than 0),
     /// Options.Ack.All,
     /// Producer instantation will fail if user-supplied configuration is incompatible.
     /// </summary>
@@ -27,7 +28,7 @@ public class Options
     public bool EnableIdempotence { get; set; }
 
     /// <summary>
-    /// Delay in milliseconds to wait for messages in the producer queue to accumulate before constructing message batches (MessageSets) to transmit to brokers. 
+    /// Delay in milliseconds to wait for messages in the producer queue to accumulate before constructing message batches (MessageSets) to transmit to brokers.
     /// A higher value allows larger and more effective (less overhead, improved compression) batches of messages to accumulate at the expense of increased message delivery latency.
     /// </summary>
     /// <example>5</example>
@@ -35,8 +36,8 @@ public class Options
     public int LingerMs { get; set; }
 
     /// <summary>
-    /// Maximum number of in-flight requests per broker connection. 
-    /// This is a generic property applied to all broker communication, however it is primarily relevant to produce requests. 
+    /// Maximum number of in-flight requests per broker connection.
+    /// This is a generic property applied to all broker communication, however it is primarily relevant to produce requests.
     /// In particular, note that other mechanisms limit the number of outstanding consumer fetch request per broker to one.
     /// </summary>
     /// <example>1000000</example>
@@ -44,9 +45,9 @@ public class Options
     public int MaxInFlight { get; set; }
 
     /// <summary>
-    /// Local message timeout. This value is only enforced locally and limits the time a produced message waits for successful delivery. A time of 0 is infinite. 
-    /// This is the maximum time librdkafka may use to deliver a message (including retries). 
-    /// Delivery error occurs when either the retry count or the message timeout are exceeded. 
+    /// Local message timeout. This value is only enforced locally and limits the time a produced message waits for successful delivery. A time of 0 is infinite.
+    /// This is the maximum time librdkafka may use to deliver a message (including retries).
+    /// Delivery error occurs when either the retry count or the message timeout are exceeded.
     /// The message timeout is automatically adjusted to TransactionTimeoutMs if Options.TransactionalId is configured.
     /// </summary>
     /// <example>300000</example>
@@ -54,7 +55,7 @@ public class Options
     public int MessageTimeoutMs { get; set; }
 
     /// <summary>
-    ///  Maximum Kafka protocol request message size. 
+    ///  Maximum Kafka protocol request message size.
     ///  Due to differing framing overhead between protocol versions the producer is unable to reliably enforce a strict max message limit at produce time and may exceed the maximum size by one message in protocol ProduceRequests, the broker will enforce the the topic's Options.MessageMaxBytes limit (see Apache Kafka documentation)
     /// </summary>
     /// <example>1000000</example>
@@ -62,9 +63,10 @@ public class Options
     public int MessageMaxBytes { get; set; }
 
     /// <summary>
-    /// How many times to retry sending a failing Message. 
+    /// How many times to retry sending a failing Message.
     /// Retrying may cause reordering unless Options.EnableIdempotence is set to true.
     /// </summary>
+    /// <example>5</example>
     [DefaultValue(2147483647)]
     public int MessageSendMaxRetries { get; set; }
 
@@ -76,8 +78,8 @@ public class Options
     public Partitioners Partitioner { get; set; }
 
     /// <summary>
-    /// Maximum total message size sum allowed on the producer queue. 
-    /// This queue is shared by all topics and partitions. 
+    /// Maximum total message size sum allowed on the producer queue.
+    /// This queue is shared by all topics and partitions.
     /// This property has higher priority than Options.QueueBufferingMaxMessages.
     /// </summary>
     /// <example>1048576</example>
@@ -92,16 +94,16 @@ public class Options
     public int QueueBufferingMaxMessages { get; set; }
 
     /// <summary>
-    /// Enables the transactional producer. 
-    /// Used to identify the same transactional producer instance across process restarts. 
-    /// It allows the producer to guarantee that transactions corresponding to earlier instances of the same producer have been finalized prior to starting any new transactions, and that any zombie instances are fenced off. 
+    /// Enables the transactional producer.
+    /// Used to identify the same transactional producer instance across process restarts.
+    /// It allows the producer to guarantee that transactions corresponding to earlier instances of the same producer have been finalized prior to starting any new transactions, and that any zombie instances are fenced off.
     /// If no TransactionalId is provided, then the producer is limited to idempotent delivery (if Options.EnableIdempotence is set). Requires broker version >= 0.11.0.
     /// </summary>
     /// <example>1</example>
     public string TransactionalId { get; set; }
 
     /// <summary>
-    /// The maximum amount of time in milliseconds that the transaction coordinator will wait for a transaction status update from the producer before proactively aborting the ongoing transaction. 
+    /// The maximum amount of time in milliseconds that the transaction coordinator will wait for a transaction status update from the producer before proactively aborting the ongoing transaction.
     /// If this value is larger than the `transaction.max.timeout.ms` setting in the broker, the call will fail with Timeout error.
     /// The transaction timeout automatically adjusts Options.MessageTimeoutMs and Socket.SocketTimeoutMs, unless explicitly configured in which case they must not exceed the transaction timeout (Socket.SocketTimeoutMs must be at least 100ms lower than Options.TransactionTimeoutMs).
     /// This is also the default timeout value if no timeout (-1) is supplied to the transactional API methods.
@@ -111,9 +113,24 @@ public class Options
     public int TransactionTimeoutMs { get; set; }
 
     /// <summary>
-    /// A comma-separated list of debug contexts to enable. 
+    /// A comma-separated list of debug contexts to enable.
     /// Detailed Producer debugging: broker,topic,msg.
     /// </summary>
     /// <example>broker</example>
     public string Debug { get; set; }
+
+    /// <summary>
+    /// Whether to throw an error on failure.
+    /// </summary>
+    /// <example>true</example>
+    [DefaultValue(true)]
+    public bool ThrowErrorOnFailure { get; set; } = true;
+
+    /// <summary>
+    /// Overrides the error message on failure.
+    /// </summary>
+    /// <example>Failed to produce message to Kafka</example>
+    [DisplayFormat(DataFormatString = "Text")]
+    [DefaultValue("")]
+    public string ErrorMessageOnFailure { get; set; } = string.Empty;
 }

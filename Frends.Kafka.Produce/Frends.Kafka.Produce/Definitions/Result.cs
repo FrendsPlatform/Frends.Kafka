@@ -1,4 +1,4 @@
-﻿namespace Frends.Kafka.Produce.Definitions;
+namespace Frends.Kafka.Produce.Definitions;
 
 /// <summary>
 /// Task's result.
@@ -9,17 +9,17 @@ public class Result
     /// True if message was produced successfully.
     /// </summary>
     /// <example>true</example>
-    public bool Success { get; private set; }
+    public bool Success { get; set; }
 
     /// <summary>
     /// Produce result.
     /// </summary>
     /// <example>PossiblyPersisted</example>
-    public dynamic Data { get; private set; }
+    public dynamic Data { get; set; }
 
-    internal Result(bool success, dynamic data)
-    {
-        Success = success;
-        Data = data;
-    }
+    /// <summary>
+    /// Error that occurred during task execution.
+    /// </summary>
+    /// <example>object { string Message, Exception AdditionalInfo }</example>
+    public Error Error { get; set; }
 }

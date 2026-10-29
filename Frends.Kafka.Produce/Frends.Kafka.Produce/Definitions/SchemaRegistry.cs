@@ -41,7 +41,7 @@ public class SchemaRegistry
     public string BasicAuthUserInfo { get; set; }
 
     /// <summary>
-    /// Enable SSL verification. 
+    /// Enable SSL verification.
     /// Disabling SSL verification is insecure and should only be done for reasons of convenience in test/dev environments.
     /// </summary>
     /// <example>true</example>
@@ -66,7 +66,7 @@ public class SchemaRegistry
     public int RequestTimeoutMs { get; set; }
 
     /// <summary>
-    /// File path to CA certificate(s) for verifying the Schema Registry's key. 
+    /// File path to CA certificate(s) for verifying the Schema Registry's key.
     /// System CA certs will be used if not specified.
     /// </summary>
     /// <example>/path/to/your/file</example>
@@ -76,7 +76,7 @@ public class SchemaRegistry
     /// <summary>
     /// SSL keystore (PKCS#12) location.
     /// </summary>
-    /// <example>/path/to/your/file</example>   
+    /// <example>/path/to/your/file</example>
     [UIHint(nameof(UseSchemaRegistry), "", true)]
     public string SslKeystoreLocation { get; set; }
 
@@ -187,7 +187,6 @@ public class SchemaRegistry
     /// </example>
     [UIHint(nameof(UseSchemaRegistry), "", true)]
     public string SchemaJson { get; set; }
-
 
     /// <summary>
     /// Field values as an JSON array.

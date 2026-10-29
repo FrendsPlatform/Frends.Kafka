@@ -1,0 +1,12 @@
+[
+  {
+    "Task": "Frends.Kafka.Produce.Kafka.Produce",
+    "Migrations": [
+      {
+        "Version": "3.0.0",
+        "Description": "Socket, Sasl, Ssl and SchemaRegistry parameters were moved under the new Connection parameter.",
+        "Migration": []
+      }
+    ]
+  }
+]
