@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using Confluent.Kafka;
 using Frends.Kafka.Consume.Definitions;
 using NUnit.Framework;
@@ -729,8 +730,9 @@ public class TestSchemaRegistry : TestBase
         ClassicAssert.IsTrue(result.Data[0].Value.ToString().Contains("record"));
     }
 
-    // Can't be tested with real data.
+    // Can't be tested with real data. Linux librdkafka has no GSSAPI provider.
     [Test]
+    [Platform(Include = "Win")]
     public void Kafka_Consume_Avro_SaslMechanisms_Gssapi()
     {
         sasl.SaslMechanism = SaslMechanisms.Gssapi;

@@ -585,8 +585,9 @@ public class TestBasic : TestBase
         ClassicAssert.IsTrue(result.Data.Any(x => x.Value.Contains(message)));
     }
 
-    // Can't be tested with real data.
+    // Can't be tested with real data. Linux librdkafka has no GSSAPI provider.
     [Test]
+    [Platform(Include = "Win")]
     public void Kafka_Consume_Basic_SaslMechanisms_Gssapi()
     {
         sasl.SaslMechanism = SaslMechanisms.Gssapi;
