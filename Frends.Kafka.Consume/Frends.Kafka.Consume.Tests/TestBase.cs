@@ -147,10 +147,21 @@ public abstract class TestBase
 
     protected async Task ProduceTestMessage(bool isBasic, string? msgKey, string? msg, string? records, string? schema)
     {
+        // Producer must not use the socket settings under test, otherwise broken values (e.g. 1 byte receive buffer) make ProduceAsync wait for minutes.
+        var producerSocket = new Socket()
+        {
+            SocketTimeoutMs = 60000,
+            SocketConnectionSetupTimeoutMs = 30000,
+            SocketKeepaliveEnable = false,
+            SocketMaxFails = 1,
+            SocketNagleDisable = false,
+            SocketReceiveBufferBytes = 0,
+        };
+
         if (isBasic)
-            await MessageProducer.ProduceBasic(input, options, socket, sasl, ssl, msgKey, msg, default);
+            await MessageProducer.ProduceBasic(input, options, producerSocket, sasl, ssl, msgKey, msg, default);
         else
-            await MessageProducer.ProduceAvro(input, options, socket, sasl, ssl, records, schema, msgKey, schemaRegistry, default);
+            await MessageProducer.ProduceAvro(input, options, producerSocket, sasl, ssl, records, schema, msgKey, schemaRegistry, default);
     }
 
     protected Connection Conn() => new() { Socket = socket, Sasl = sasl, Ssl = ssl, SchemaRegistry = schemaRegistry };
