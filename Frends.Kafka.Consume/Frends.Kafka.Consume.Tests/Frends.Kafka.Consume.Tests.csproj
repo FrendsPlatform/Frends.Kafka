@@ -1,31 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
 
-    <IsPackable>false</IsPackable>
-  </PropertyGroup>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
-    <PackageReference Include="Confluent.Kafka" Version="2.4.0" />
-    <PackageReference Include="Confluent.SchemaRegistry" Version="2.4.0" />
-    <PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" Version="2.4.0" />
-    <PackageReference Include="dotenv.net" Version="3.2.0" />
-	  <PackageReference Include="MSTest.TestFramework" Version="3.3.1" />
-	  <PackageReference Include="nunit" Version="4.1.0" />
-	  <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-	  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-	  <PackageReference Include="coverlet.collector" Version="3.1.2">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556"/>
+        <PackageReference Include="Confluent.Kafka" Version="2.16.0" />
+        <PackageReference Include="Confluent.SchemaRegistry" Version="2.16.0" />
+        <PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" Version="2.16.0" />
+        <PackageReference Include="dotenv.net" Version="4.2.0"/>
+        <PackageReference Include="MSTest.TestFramework" Version="4.5.2" />
+        <PackageReference Include="nunit" Version="5.0.0" />
+        <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+        <PackageReference Include="coverlet.collector" Version="10.1.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Frends.Kafka.Consume\Frends.Kafka.Consume.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Frends.Kafka.Consume\Frends.Kafka.Consume.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include=".env" CopyToOutputDirectory="PreserveNewest" Condition="Exists('.env')"/>
+    </ItemGroup>
 
 </Project>

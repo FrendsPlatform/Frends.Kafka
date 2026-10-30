@@ -10,10 +10,6 @@ public class TestConfig
     public static void SetUp()
     {
         // load envs
-        var root = Directory.GetCurrentDirectory();
-        string projDir = Directory.GetParent(root)!.Parent!.Parent!.FullName;
-        DotEnv.Load(
-            options: new DotEnvOptions(
-                envFilePaths: [$"{projDir}{Path.DirectorySeparatorChar}.env.local"]));
+        DotEnv.Load();
     }
 }
