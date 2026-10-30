@@ -304,7 +304,7 @@ public class TestSchemaRegistry
     }
 
     [Test]
-    [Ignore("Manual test.")]
+    [NUnit.Framework.Ignore("Manual test.")]
     public async Task Kafka_Consume_Avro_MessageCount_DontReadAll()
     {
         var rndCount = new Random().Next(0, 6);

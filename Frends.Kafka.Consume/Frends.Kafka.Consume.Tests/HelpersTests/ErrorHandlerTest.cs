@@ -1,5 +1,6 @@
 using Frends.Kafka.Consume.Definitions;
 using NUnit.Framework;
+using Assert = NUnit.Framework.Assert;
 
 namespace Frends.Kafka.Consume.Tests.HelpersTests;
 

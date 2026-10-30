@@ -37,7 +37,7 @@ public class TestBasic
     private SchemaRegistry schemaRegistry = new();
 
     [SetUp]
-    public async Task Setup()
+    public void Setup()
     {
         input = new Input()
         {
@@ -186,7 +186,7 @@ public class TestBasic
     }
 
     [Test]
-    [Ignore("Manual test.")]
+    [NUnit.Framework.Ignore("Manual test.")]
     public async Task Kafka_Consume_Basic_MessageCount_DontReadAll()
     {
         var rndCount = new Random().Next(1, 6);
