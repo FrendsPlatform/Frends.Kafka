@@ -6,28 +6,11 @@ using NUnit.Framework.Legacy;
 namespace Frends.Kafka.Consume.Tests;
 
 [TestFixture]
-public class TestSchemaRegistry
+public class TestSchemaRegistry : TestBase
 {
-    /*
-        Update 05/2024:
-            Using cloud Confluent Kafka. Set your own configs or see 'Basic testing with docker'.
+    protected override string Topic => "ConsumeAvroTest";
 
-        Basic testing with docker:
-        Docker compose:
-        Run command 'docker-compose up -d' in .\Frends.Kafka.Consume.Tests
-
-        Read message(s) from topic:
-        docker exec --interactive --tty "container's name" kafka-console-consumer --bootstrap-server localhost:9092 --topic ConsumeTopic --from-beginning
-    */
-
-    private readonly string message = $"Hello {DateTime.Now}";
-    private readonly string topic = "ConsumeAvroTest";
-    private readonly string? bootstrapServers = Environment.GetEnvironmentVariable("ConfluentKafka_BootstrapServers");
-    private readonly string? apiKey = Environment.GetEnvironmentVariable("ConfluentKafka_APIKey");
-    private readonly string? apiKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_APIKeySecret");
-    private readonly string? schemaRegistryURL = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryURL");
-    private readonly string? schemaRegistryAPIKey = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKey");
-    private readonly string? schemaRegistryAPIKeySecret = Environment.GetEnvironmentVariable("ConfluentKafka_SchemaRegistryAPIKeySecret");
+    protected override bool UseSchemaRegistry => true;
 
     private readonly string records = @"{
   ""intField"": 1,
@@ -147,129 +130,6 @@ public class TestSchemaRegistry
   ""type"": ""record""
 }";
 
-    private Input input = new();
-    private Options options = new();
-    private Sasl sasl = new();
-    private Socket socket = new();
-    private Ssl ssl = new();
-    private SchemaRegistry schemaRegistry = new();
-
-    [SetUp]
-    public void Setup()
-    {
-        input = new Input()
-        {
-            Host = bootstrapServers,
-            Topic = topic,
-            SecurityProtocol = SecurityProtocols.SaslSsl,
-            MessageCount = 1,
-            Timeout = 10000,
-            Partition = -1,
-        };
-
-        options = new Options()
-        {
-            Acks = Ack.None,
-            MaxInFlight = 1000000,
-            MessageMaxBytes = 1000000,
-            ConnectionsMaxIdleMs = 10000,
-            AutoCommitIntervalMs = 5000,
-            AutoOffsetReset = AutoOffsetResets.Earliest,
-            BrokerAddressFamily = BrokerAddressFamilys.Any,
-            EnableAutoCommit = true,
-            EnableAutoOffsetStore = true,
-            CheckCrcs = false,
-            FetchErrorBackoffMs = 500,
-            FetchMaxBytes = 52428800,
-            FetchMinBytes = 1,
-            FetchWaitMaxMs = 500,
-            GroupId = "csharp-group-1",
-            GroupInstanceId = null,
-            HeartbeatIntervalMs = 3000,
-            IsolationLevel = IsolationLevels.ReadUncommitted,
-            QueuedMaxMessagesKbytes = 65536,
-            QueuedMinMessages = 1,
-            ReconnectBackoffMaxMs = 10000,
-            ReconnectBackoffMs = 100,
-            SessionTimeoutMs = 10000,
-            MaxPollIntervalMs = 20000,
-            Debug = "all",
-            EncodeMessageKey = true,
-        };
-
-        socket = new Socket()
-        {
-            SocketConnectionSetupTimeoutMs = 30000,
-            SocketKeepaliveEnable = false,
-            SocketMaxFails = 1,
-            SocketNagleDisable = false,
-            SocketReceiveBufferBytes = 0,
-            SocketTimeoutMs = 10000,
-        };
-
-        schemaRegistry = new SchemaRegistry()
-        {
-            UseSchemaRegistry = true,
-            BasicAuthCredentialsSource = AuthCredentialsSources.UserInfo,
-            BasicAuthUserInfo = $"{schemaRegistryAPIKey}:{schemaRegistryAPIKeySecret}",
-            MaxCachedSchemas = 1000,
-            RequestTimeoutMs = 30000,
-            SchemaRegistryUrl = schemaRegistryURL,
-            SslCaLocation = null,
-            SslKeystoreLocation = null,
-            SslKeystorePassword = null,
-        };
-
-        socket = new Socket()
-        {
-            SocketTimeoutMs = 60000,
-            SocketConnectionSetupTimeoutMs = 30000,
-            SocketKeepaliveEnable = false,
-            SocketMaxFails = 1,
-            SocketNagleDisable = false,
-            SocketReceiveBufferBytes = 0,
-        };
-
-        // SASL is required for cloud tests.
-        sasl = new Sasl()
-        {
-            UseSasl = true,
-            SaslMechanism = SaslMechanisms.Plain,
-            SaslUsername = apiKey,
-            SaslPassword = apiKeySecret,
-        };
-
-        ssl = new Ssl()
-        {
-            UseSsl = false,
-            SslEndpointIdentificationAlgorithm = SslEndpointIdentificationAlgorithms.None,
-            EnableSslCertificateVerification = true,
-            SslCaCertificateStores = "root",
-            SslCaLocation = "root",
-            SslCaPem = null,
-            SslCertificateLocation = null,
-            SslCertificatePem = null,
-            SslCipherSuites = null,
-            SslCrlLocation = null,
-            SslCurvesList = null,
-            SslEngineLocation = null,
-            SslKeyLocation = null,
-            SslKeyPassword = null,
-            SslKeyPem = null,
-            SslKeystoreLocation = null,
-            SslKeystorePassword = null,
-            SslSigalgsList = null,
-        };
-    }
-
-    // In comments because this method can be used to manually clear the pool after debugging etc.
-    // [TearDown]
-    // public void Cleanup()
-    // {
-    //    //_schemaRegistry.UseSchemaRegistry = true;
-    //    //while(true)
-    //    //    Kafka.Consume(_input, Conn(), _options, default);
-    // }
     [Test]
     public async Task Kafka_Consume_Avro_Test()
     {
@@ -1131,14 +991,4 @@ public class TestSchemaRegistry
             ClassicAssert.IsTrue(result.Data[0].Value.ToString().Contains("record"), $"looper: {item}");
         }
     }
-
-    private async Task ProduceTestMessage(bool isBasic, string? msgKey, string? msg, string? records, string? schema)
-    {
-        if (isBasic)
-            await MessageProducer.ProduceBasic(input, options, socket, sasl, ssl, msgKey, msg, default);
-        else
-            await MessageProducer.ProduceAvro(input, options, socket, sasl, ssl, records, schema, msgKey, schemaRegistry, default);
-    }
-
-    private Connection Conn() => new() { Socket = socket, Sasl = sasl, Ssl = ssl, SchemaRegistry = schemaRegistry };
 }
