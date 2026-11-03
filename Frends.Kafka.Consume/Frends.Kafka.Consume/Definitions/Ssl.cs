@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Frends.Kafka.Consume.Definitions;
@@ -17,8 +17,8 @@ public class Ssl
 
     /// <summary>
     /// Endpoint identification algorithm to validate broker hostname using broker certificate.
-    /// https - Server (broker) hostname verification as specified in RFC2818. 
-    /// none - No endpoint verification. 
+    /// https - Server (broker) hostname verification as specified in RFC2818.
+    /// none - No endpoint verification.
     /// OpenSSL >= 1.0.2 required.
     /// </summary>
     /// <example>SslEndpointIdentificationAlgorithm.None</example>
@@ -63,7 +63,7 @@ public class Ssl
     public string SslKeystoreLocation { get; set; }
 
     /// <summary>
-    /// Path to OpenSSL engine library. 
+    /// Path to OpenSSL engine library.
     /// OpenSSL >= 1.1.0 required.
     /// </summary>
     /// <example>/path/to/your/file</example>
@@ -102,9 +102,9 @@ public class Ssl
     public string SslKeyPem { get; set; }
 
     /// <summary>
-    /// Comma-separated list of Windows Certificate stores to load CA certificates from. 
+    /// Comma-separated list of Windows Certificate stores to load CA certificates from.
     /// Certificates will be loaded in the same order as stores are specified.
-    /// If no certificates can be loaded from any of the specified stores an error is logged and the OpenSSL library's default CA location is used instead. 
+    /// If no certificates can be loaded from any of the specified stores an error is logged and the OpenSSL library's default CA location is used instead.
     /// </summary>
     /// <example>Root</example>
     [UIHint(nameof(UseSsl), "", true)]

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace Frends.Kafka.Consume.Definitions;
 
@@ -8,20 +8,20 @@ namespace Frends.Kafka.Consume.Definitions;
 public class Result
 {
     /// <summary>
-    /// True if messages have been consumed without errors. 
+    /// True if messages have been consumed without errors.
     /// </summary>
     /// <example>true</example>
-    public bool Success { get; private set; }
+    public bool Success { get; set; }
 
     /// <summary>
     /// Result data.
     /// </summary>
     /// <example>Object { key, value }</example>
-    public List<Message> Data { get; private set; }
+    public List<Message> Data { get; set; }
 
-    internal Result(bool success, List<Message> data)
-    {
-        Success = success;
-        Data = data;
-    }
+    /// <summary>
+    /// Error that occurred during task execution.
+    /// </summary>
+    /// <example>object { string Message, Exception AdditionalInfo }</example>
+    public Error Error { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿namespace Frends.Kafka.Consume.Definitions;
+namespace Frends.Kafka.Consume.Definitions;
 
 /// <summary>
 /// Message's values.

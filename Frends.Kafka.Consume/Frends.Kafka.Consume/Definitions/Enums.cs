@@ -1,16 +1,29 @@
-﻿namespace Frends.Kafka.Consume.Definitions;
+namespace Frends.Kafka.Consume.Definitions;
 
 /// <summary>
 /// SecurityProtocols options.
 /// </summary>
 public enum SecurityProtocols
 {
-#pragma warning disable CS1591 // self explanatory
+    /// <summary>
+    /// Unencrypted communication without authentication.
+    /// </summary>
     Plaintext,
+
+    /// <summary>
+    /// Communication encrypted with SSL.
+    /// </summary>
     Ssl,
+
+    /// <summary>
+    /// SASL authentication over an unencrypted connection.
+    /// </summary>
     SaslPlaintext,
-    SaslSsl
-#pragma warning restore CS1591 // self explanatory
+
+    /// <summary>
+    /// SASL authentication over an SSL encrypted connection.
+    /// </summary>
+    SaslSsl,
 }
 
 /// <summary>
@@ -31,7 +44,7 @@ public enum Ack
     /// <summary>
     /// Broker will block until message is committed by all in sync replicas (ISRs).
     /// </summary>
-    All
+    All,
 }
 
 /// <summary>
@@ -39,13 +52,30 @@ public enum Ack
 /// </summary>
 public enum SaslMechanisms
 {
-#pragma warning disable CS1591 // self explanatory
+    /// <summary>
+    /// GSSAPI (Kerberos) mechanism.
+    /// </summary>
     Gssapi,
+
+    /// <summary>
+    /// PLAIN username and password mechanism.
+    /// </summary>
     Plain,
+
+    /// <summary>
+    /// SCRAM-SHA-256 mechanism.
+    /// </summary>
     ScramSha256,
+
+    /// <summary>
+    /// SCRAM-SHA-512 mechanism.
+    /// </summary>
     ScramSha512,
-    OAuthBearer
-#pragma warning restore CS1591 // self explanatory
+
+    /// <summary>
+    /// OAUTHBEARER mechanism.
+    /// </summary>
+    OAuthBearer,
 }
 
 /// <summary>
@@ -53,10 +83,15 @@ public enum SaslMechanisms
 /// </summary>
 public enum SaslOauthbearerMethods
 {
-#pragma warning disable CS1591 // self explanatory
+    /// <summary>
+    /// Default OAuth bearer method.
+    /// </summary>
     Default,
-    Oidc
-#pragma warning restore CS1591 // self explanatory
+
+    /// <summary>
+    /// OpenID Connect OAuth bearer method.
+    /// </summary>
+    Oidc,
 }
 
 /// <summary>
@@ -64,10 +99,15 @@ public enum SaslOauthbearerMethods
 /// </summary>
 public enum SslEndpointIdentificationAlgorithms
 {
-#pragma warning disable CS1591 // self explanatory
+    /// <summary>
+    /// Disable endpoint identification.
+    /// </summary>
     None,
-    Https
-#pragma warning restore CS1591 // self explanatory
+
+    /// <summary>
+    /// Verify the server hostname using HTTPS endpoint identification.
+    /// </summary>
+    Https,
 }
 
 /// <summary>
@@ -88,7 +128,7 @@ public enum AutoOffsetResets
     /// <summary>
     /// Trigger an error.
     /// </summary>
-    Error
+    Error,
 }
 
 /// <summary>
@@ -96,11 +136,20 @@ public enum AutoOffsetResets
 /// </summary>
 public enum BrokerAddressFamilys
 {
-#pragma warning disable CS1591 // self explanatory
+    /// <summary>
+    /// Use any IP address family.
+    /// </summary>
     Any,
+
+    /// <summary>
+    /// Use IPv4 only.
+    /// </summary>
     V4,
-    V6
-#pragma warning restore CS1591 // self explanatory
+
+    /// <summary>
+    /// Use IPv6 only.
+    /// </summary>
+    V6,
 }
 
 /// <summary>
@@ -116,7 +165,7 @@ public enum IsolationLevels
     /// <summary>
     /// Only return transactional messages which have been committed.
     /// </summary>
-    ReadCommitted
+    ReadCommitted,
 }
 
 /// <summary>
@@ -128,8 +177,9 @@ public enum AuthCredentialsSources
     /// Credentials are specified via the `schema.registry.basic.auth.user.info` config property in the form username:password. If `schema.registry.basic.auth.user.info` is not set, authentication is disabled.
     /// </summary>
     UserInfo,
+
     /// <summary>
     /// Credentials are specified via the `sasl.username` and `sasl.password` configuration properties.
     /// </summary>
-    SaslInherit
+    SaslInherit,
 }
